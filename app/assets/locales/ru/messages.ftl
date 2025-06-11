@@ -29,6 +29,18 @@ unit-days = { $value ->
     *[other] дней
 }
 
+msg-plan-detail =
+    <blockquote>
+    { $type ->
+    [devices]
+    • Количество устройств: { $current_devices } / { $max_devices }
+    • Заканчивается через: { $expiry_time }
+    *[traffic]
+    • Трафик: { $current_traffic } / { $max_traffic }
+    • Заканчивается через: { $expiry_time }
+    }
+    </blockquote>
+
 # Menu
 msg-menu-subscription =
     <b>
@@ -36,10 +48,7 @@ msg-menu-subscription =
     </b>
     { $status ->
     [active]
-    <blockquote>
-    • Количество устройств: { $devices } / { $max_devices }
-    • Заканчивается через: { $expiry_time }
-    </blockquote>
+    { $plan }
     [expired]
     <blockquote>
     • Срок действия истёк.
@@ -48,7 +57,8 @@ msg-menu-subscription =
     *[none]
     <blockquote>
     • У вас нет подписки
-    • Чтобы купить нажмите кнопку "💳 Подписка"
+
+    Для оформления подписки перейдите в меню "💳 Подписка"
     </blockquote>
     }
 
@@ -57,7 +67,7 @@ msg-menu-profile =
     👤 Профиль:
     </b>
     <blockquote>
-    • ID: { $id }
+    • ID: <code>{ $id }</code>
     • Имя: { $name }
     • Баланс: { $balance }
     </blockquote>
@@ -68,6 +78,29 @@ msg-dashboard = <b>🛠 Панель управления:</b>
 msg-dashboard-statistics = <b>📊 Статистика:</b>
 
 msg-dashboard-users = <b>👥 Пользователи:</b>
+msg-users-user = 
+    <b>
+    📝 Информация о пользователе:
+    </b>
+
+    👤 Профиль:
+    <blockquote>
+    • ID: <code>{ $id }</code>
+    • Имя: { $name }
+    • Баланс: { $balance }
+    • Роль: { $role }
+    </blockquote>
+
+    💳 Подписка:
+    { $has_subscription ->
+    [true]
+    { $plan }
+    *[false]
+    <blockquote>
+    • Нет оформленной подписки
+    </blockquote>
+    }
+
 msg-dashboard-banlist = <b>🚫 Черный список:</b>
 msg-dashboard-broadcast = <b>📢 Рассылка:</b>
 msg-dashboard-promocodes = <b>🎟 Промокоды:</b>
@@ -132,8 +165,8 @@ msg-remnawave-host-details =
     *[off] выключен
     }):
     <blockquote>
-    • Адрес: { $address }:{ $port }
-    • Инбаунд: { $inbound_uuid }
+    • Адрес: <code>{ $address }:{ $port }</code>
+    • Инбаунд: <code>{ $inbound_uuid }</code>
     </blockquote>
 
 msg-remnawave-hosts =
@@ -149,7 +182,7 @@ msg-remnawave-node-details =
     *[off] отключено
     }):
     <blockquote>
-    • Адрес: { $address }:{ $port }
+    • Адрес: <code>{ $address }:{ $port }</code>
     • Аптайм (xray): { $xray_uptime }
     • Пользователей онлайн: { $users_online }
     • Трафик: { $traffic_used } / {$traffic_limit}
@@ -165,7 +198,7 @@ msg-remnawave-nodes =
 msg-remnawave-inbound-details =
     🔗 { $tag }
     <blockquote>
-    • UUID: { $uuid }
+    • UUID: <code>{ $uuid }</code>
     • Протокол: { $type } ({ $network })
     • Порт: { $port }
     • Безопасность: { $security } 

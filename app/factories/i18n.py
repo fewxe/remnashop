@@ -15,14 +15,14 @@ logger = logging.getLogger(__name__)
 
 
 def create_i18n_middleware(config: AppConfig) -> I18nMiddleware:
-    loader = FluentResourceLoader(f"{config.i18n.locales_dir}/{{locale}}")
+    loader = FluentResourceLoader(roots=f"{config.i18n.locales_dir}/{{locale}}")
     locales = {
         locale: FluentLocalization(
-            [locale, config.i18n.default_locale],
-            RESOURCE_I18N,
-            loader,
+            locales=[locale, config.i18n.default_locale],
+            resource_ids=RESOURCE_I18N,
+            resource_loader=loader,
         )
         for locale in config.i18n.locales
     }
     logger.debug(f"Available locales: {list(locales.keys())}")
-    return I18nMiddleware(locales, config.i18n.default_locale)
+    return I18nMiddleware(locales=locales, default_locale=config.i18n.default_locale)

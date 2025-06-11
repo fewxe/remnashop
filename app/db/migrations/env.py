@@ -7,7 +7,7 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 from app.core.config import AppConfig
-from app.db.models import Base
+from app.db.models.sql import Base
 
 config = context.config
 db_config = AppConfig.get().db

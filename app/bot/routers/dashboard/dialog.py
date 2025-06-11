@@ -1,10 +1,11 @@
-from aiogram_dialog import Dialog, Window
+from aiogram_dialog import Dialog, DialogManager, Window
 from aiogram_dialog.widgets.kbd import Button, Row, Start, SwitchTo
 
 from app.bot.conditions import is_dev
 from app.bot.states import DashboardState, MenuState, RemnashopState
 from app.bot.widgets import Banner, I18nFormat, IgnoreInput
 from app.core.enums import BannerName
+from app.db.models import UserDto
 
 from .remnawave.dialog import on_click
 
@@ -67,7 +68,7 @@ dashboard = Window(
 )
 
 statistics = Window(
-    Banner(BannerName.DEFAULT),
+    Banner(BannerName.DASHBOARD),
     I18nFormat("msg-dashboard-statistics"),
     Row(
         SwitchTo(
@@ -81,7 +82,7 @@ statistics = Window(
 )
 
 users = Window(
-    Banner(BannerName.DEFAULT),
+    Banner(BannerName.DASHBOARD),
     I18nFormat("msg-dashboard-users"),
     Row(
         Button(
@@ -120,7 +121,7 @@ users = Window(
 )
 
 banlist = Window(
-    Banner(BannerName.DEFAULT),
+    Banner(BannerName.DASHBOARD),
     I18nFormat("msg-users-banlist"),
     Row(
         Button(
@@ -139,8 +140,75 @@ banlist = Window(
     state=DashboardState.banlist,
 )
 
+
+async def user_getter(
+    dialog_manager: DialogManager,
+    **kwargs,
+) -> dict:
+    # user: UserDto = dialog_manager.start_data["find_user"]
+    # return {
+    #     "id": user.id,
+    #     "name": user.name,
+    #     "balance": user.balance,
+    #     "role": user.role,
+    # }
+    return dialog_manager.start_data
+
+
+user_detail = Window(
+    Banner(BannerName.DASHBOARD),
+    I18nFormat("msg-users-user"),
+    Row(
+        Button(
+            I18nFormat("btn-user-refresh"),
+            id="user.refresh",
+        )
+    ),
+    Row(
+        Button(
+            I18nFormat("btn-user-send-message"),
+            id="user.send_message",
+        )
+    ),
+    Row(
+        Button(
+            I18nFormat("btn-user-set-role"),
+            id="user.set_role",
+        )
+    ),
+    Row(
+        Button(
+            I18nFormat("btn-user-block"),
+            id="user.block",
+        )
+    ),
+    Row(
+        Button(
+            I18nFormat("btn-user-change-balance"),
+            id="user.change_balance",
+        )
+    ),
+    Row(
+        Button(
+            I18nFormat("btn-user-change-subscription"),
+            id="user.change_subscription",
+        )
+    ),
+    Row(
+        SwitchTo(
+            I18nFormat("btn-back"),
+            id="back.dashboard",
+            state=DashboardState.users,
+        )
+    ),
+    IgnoreInput(),
+    state=DashboardState.user,
+    getter=user_getter,
+)
+
+
 broadcast = Window(
-    Banner(BannerName.DEFAULT),
+    Banner(BannerName.DASHBOARD),
     I18nFormat("msg-dashboard-broadcast"),
     Row(
         Button(
@@ -186,7 +254,7 @@ broadcast = Window(
 )
 
 promocodes = Window(
-    Banner(BannerName.DEFAULT),
+    Banner(BannerName.DASHBOARD),
     I18nFormat("msg-dashboard-promocodes"),
     Row(
         Button(
@@ -220,7 +288,7 @@ promocodes = Window(
 )
 
 maintenance = Window(
-    Banner(BannerName.DEFAULT),
+    Banner(BannerName.DASHBOARD),
     I18nFormat("msg-dashboard-maintenance"),
     Row(
         Button(
@@ -253,6 +321,7 @@ router = Dialog(
     dashboard,
     statistics,
     users,
+    user_detail,
     banlist,
     broadcast,
     promocodes,

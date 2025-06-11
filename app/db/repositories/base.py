@@ -6,7 +6,7 @@ from sqlalchemy import ColumnExpressionArgument, delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 
-from ..uow import UoW
+from app.db.uow import UoW
 
 T = TypeVar("T", bound=Any)
 ColumnClauseType = Union[

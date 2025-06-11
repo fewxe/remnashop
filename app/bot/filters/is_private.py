@@ -1,8 +1,8 @@
 from aiogram.enums import ChatType
 from aiogram.filters import BaseFilter
-from aiogram.types import Chat
+from aiogram.types import Message
 
 
 class IsPrivate(BaseFilter):
-    async def __call__(self, event_chat: Chat) -> bool:
-        return event_chat.type == ChatType.PRIVATE
+    async def __call__(self, event: Message) -> bool:
+        return event.chat.type == ChatType.PRIVATE

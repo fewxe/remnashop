@@ -9,6 +9,7 @@ class DashboardState(StatesGroup):
     main = State()
     statistics = State()
     users = State()
+    user = State()
     broadcast = State()
     promocodes = State()
     banlist = State()

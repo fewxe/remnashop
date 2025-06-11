@@ -1,5 +1,4 @@
 from aiogram_dialog import DialogManager
-from remnawave_api import RemnawaveSDK
 from remnawave_api.models import (
     HostsResponseDto,
     InboundsResponseDto,
@@ -8,6 +7,7 @@ from remnawave_api.models import (
 )
 
 from app.bot.middlewares.i18n import I18nFormatter
+from app.bot.models.containers import AppContainer
 from app.core.constants import UNLIMITED
 from app.core.formatters import (
     format_bytes,
@@ -19,28 +19,28 @@ from app.core.formatters import (
 
 async def system_getter(
     dialog_manager: DialogManager,
-    remnawave: RemnawaveSDK,
-    i18n_format: I18nFormatter,
+    container: AppContainer,
+    i18n_formatter: I18nFormatter,
     **kwargs,
 ) -> dict:
-    stats: StatisticResponseDto = await remnawave.system.get_stats()
+    stats: StatisticResponseDto = await container.remnawave.system.get_stats()
 
     return {  # NOTE: think about a models for translations
         "cpu_cores": stats.cpu.physical_cores,
         "cpu_threads": stats.cpu.cores,
-        "ram_used": format_bytes(stats.memory.active, i18n_format),
-        "ram_total": format_bytes(stats.memory.total, i18n_format),
+        "ram_used": format_bytes(stats.memory.active, i18n_formatter),
+        "ram_total": format_bytes(stats.memory.total, i18n_formatter),
         "ram_used_percent": format_percent(stats.memory.active, stats.memory.total),
-        "uptime": format_duration(stats.uptime, i18n_format, True),
+        "uptime": format_duration(stats.uptime, i18n_formatter, True),
     }
 
 
 async def users_getter(
     dialog_manager: DialogManager,
-    remnawave: RemnawaveSDK,
+    container: AppContainer,
     **kwargs,
 ) -> dict:
-    stats: StatisticResponseDto = await remnawave.system.get_stats()
+    stats: StatisticResponseDto = await container.remnawave.system.get_stats()
 
     return {
         "users_total": str(stats.users.total_users),
@@ -57,14 +57,14 @@ async def users_getter(
 
 async def hosts_getter(
     dialog_manager: DialogManager,
-    remnawave: RemnawaveSDK,
-    i18n_format: I18nFormatter,
+    container: AppContainer,
+    i18n_formatter: I18nFormatter,
     **kwargs,
 ) -> dict:
-    hosts: HostsResponseDto = await remnawave.hosts.get_all_hosts()
+    hosts: HostsResponseDto = await container.remnawave.hosts.get_all_hosts()
 
     hosts_text = "\n".join(
-        i18n_format(
+        i18n_formatter(
             "msg-remnawave-host-details",
             {
                 "remark": host.remark,
@@ -82,14 +82,14 @@ async def hosts_getter(
 
 async def nodes_getter(
     dialog_manager: DialogManager,
-    remnawave: RemnawaveSDK,
-    i18n_format: I18nFormatter,
+    container: AppContainer,
+    i18n_formatter: I18nFormatter,
     **kwargs,
 ) -> dict:
-    nodes: NodesResponseDto = await remnawave.nodes.get_all_nodes()
-    print(nodes.response[0].traffic_used_bytes)
+    nodes: NodesResponseDto = await container.remnawave.nodes.get_all_nodes()
+
     nodes_text = "\n".join(
-        i18n_format(
+        i18n_formatter(
             "msg-remnawave-node-details",
             {
                 "country": format_country_code(node.country_code),
@@ -97,13 +97,13 @@ async def nodes_getter(
                 "status": "on" if node.is_connected else "off",
                 "address": node.address,
                 "port": str(node.port),
-                "xray_uptime": format_duration(str(node.xray_uptime), i18n_format, True),
+                "xray_uptime": format_duration(str(node.xray_uptime), i18n_formatter, True),
                 "users_online": str(node.users_online),
                 "traffic_used": format_bytes(
-                    node.traffic_used_bytes, i18n_format
+                    node.traffic_used_bytes, i18n_formatter
                 ),  # FIXME: not for all time? (only 7 days period)
                 "traffic_limit": (
-                    format_bytes(node.traffic_limit_bytes, i18n_format, True)
+                    format_bytes(node.traffic_limit_bytes, i18n_formatter, True)
                     if node.traffic_limit_bytes > 0
                     else UNLIMITED
                 ),
@@ -117,20 +117,20 @@ async def nodes_getter(
 
 async def inbounds_getter(
     dialog_manager: DialogManager,
-    remnawave: RemnawaveSDK,
-    i18n_format: I18nFormatter,
+    container: AppContainer,
+    i18n_formatter: I18nFormatter,
     **kwargs,
 ) -> dict:
-    inbounds: InboundsResponseDto = await remnawave.inbounds.get_inbounds()
+    inbounds: InboundsResponseDto = await container.remnawave.inbounds.get_inbounds()
 
     inbounds_text = "\n".join(
-        i18n_format(
+        i18n_formatter(
             "msg-remnawave-inbound-details",
             {
                 "uuid": str(inbound.uuid),
                 "tag": inbound.tag,
                 "type": inbound.type,
-                "port": str(inbound.port),
+                "port": str(int(inbound.port)),
                 "network": inbound.network,
                 "security": inbound.security,
             },

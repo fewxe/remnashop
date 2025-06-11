@@ -96,7 +96,7 @@ def setup_logging(config: LoggingConfig) -> None:
     os.makedirs(LOG_DIR, exist_ok=True)
     log_file = os.path.join(LOG_DIR, LOG_FILENAME)
 
-    formatter = UTCFormatter(config.format)
+    formatter = UTCFormatter(fmt=config.format)
     file_handler = ArchiveRotatingFileHandler(
         filename=log_file,
         when=LOG_WHEN,

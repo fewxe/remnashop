@@ -4,12 +4,13 @@ import logging
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, Optional
 
 from aiogram.types import User as AiogramUser
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.core.enums import UserRole
+from app.db import SQLSessionContext
+from app.db.models.dto import UserDto
+from app.db.models.sql import User
 
-from .. import SQLSessionContext
-from ..models import User
+from .base import CrudService
 
 if TYPE_CHECKING:
     from app.bot.middlewares import I18nMiddleware
@@ -17,20 +18,15 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class UserService:
-    session_pool: async_sessionmaker[AsyncSession]
-
-    def __init__(self, session_pool: async_sessionmaker[AsyncSession]) -> None:
-        self.session_pool = session_pool
-
+class UserService(CrudService):
     async def create(
         self,
         aiogram_user: AiogramUser,
         i18n: I18nMiddleware,
         is_dev: bool = False,
-    ) -> User:
+    ) -> UserDto:
         async with SQLSessionContext(self.session_pool) as (repository, uow):
-            user = User(
+            db_user = User(
                 telegram_id=aiogram_user.id,
                 name=aiogram_user.full_name,
                 language=(
@@ -40,9 +36,9 @@ class UserService:
                 ),
                 role=UserRole.ADMIN if is_dev else UserRole.USER,
             )
-            await uow.commit(user)
-        logger.info(f"[User:{user.telegram_id} ({user.name})] Created in database")
-        return user
+            await uow.commit(db_user)
+        logger.info(f"[User:{db_user.telegram_id} ({db_user.name})] Created in database")
+        return db_user.dto()
 
     async def _get(
         self,
@@ -51,17 +47,24 @@ class UserService:
     ) -> Optional[User]:
         return await getter(key)
 
-    async def get(self, telegram_id: int) -> Optional[User]:
+    async def get(self, telegram_id: int) -> Optional[UserDto]:
         async with SQLSessionContext(self.session_pool) as (repository, uow):
-            return await self._get(repository.users.get, telegram_id)
+            db_user = await repository.users.get(telegram_id=telegram_id)
+            return db_user.dto() if db_user else None
 
-    async def update(self, user: User, **kwargs: Any) -> None:
-        for key, value in kwargs.items():
-            setattr(user, key, value)
+    async def update(self, user: UserDto, **data: Any) -> Optional[UserDto]:
         async with SQLSessionContext(self.session_pool) as (repository, uow):
-            await repository.users.update(telegram_id=user.telegram_id, **kwargs)
+            for key, value in data.items():
+                setattr(user, key, value)
+            db_user = await repository.users.update(**user.model_state)
+            return db_user.dto() if db_user else None
 
-    async def set_bot_blocked(self, user: User, blocked: bool) -> None:
+    async def set_bot_blocked(self, user: UserDto, blocked: bool) -> None:
+        user.is_bot_blocked = blocked
         async with SQLSessionContext(self.session_pool) as (repository, uow):
-            await repository.users.update(telegram_id=user.telegram_id, is_bot_blocked=blocked)
+            await repository.users.update(**user.model_state)
         logger.info(f"[User:{user.telegram_id} ({user.name})] Set is_bot_blocked -> {blocked}")
+
+    async def get_admins(self) -> list[User]:
+        async with SQLSessionContext(self.session_pool) as (repository, uow):
+            return await repository.users.filter_by_role(UserRole.ADMIN)

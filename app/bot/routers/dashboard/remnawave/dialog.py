@@ -3,11 +3,11 @@ import logging
 from aiogram.types import CallbackQuery
 from aiogram_dialog import Dialog, DialogManager, Window
 from aiogram_dialog.widgets.kbd import Button, Row, Start, SwitchTo
-from remnawave_api import RemnawaveSDK
 
+from app.bot.models.containers import AppContainer
 from app.bot.states import DashboardState, RemnawaveState
 from app.bot.widgets import Banner, I18nFormat, IgnoreInput
-from app.core.constants import REMNAWAVE_KEY
+from app.core.constants import APP_CONTAINER_KEY
 from app.core.enums import BannerName
 
 from .getters import (
@@ -26,10 +26,10 @@ async def on_click(
     button: Button,
     dialog_manager: DialogManager,
 ):
-    remnawave: RemnawaveSDK = dialog_manager.middleware_data.get(REMNAWAVE_KEY)
+    container: AppContainer = dialog_manager.middleware_data.get(APP_CONTAINER_KEY)
 
     try:
-        response = await remnawave.system.get_stats()
+        response = await container.remnawave.system.get_stats()
     except Exception as exception:
         logger.error(f"Remnawave: {exception}")
         # TODO: service notification

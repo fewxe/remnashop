@@ -6,6 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.constants import TIMEZONE
 from app.core.enums import UserRole
+from app.db.models.dto import UserDto
 
 from .base import Base
 
@@ -20,7 +21,7 @@ class User(Base):
     role: Mapped[UserRole] = mapped_column(Enum(UserRole), nullable=False, default=UserRole.USER)
     language: Mapped[str] = mapped_column(String, nullable=False)
 
-    balance: Mapped[Decimal] = mapped_column(Numeric(20, 8), nullable=False, default=0)
+    balance: Mapped[Decimal] = mapped_column(Numeric(20, 8), nullable=False, default=Decimal())
     personal_discount: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
     purchase_discount: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
 
@@ -37,3 +38,6 @@ class User(Base):
         default=lambda: datetime.now(TIMEZONE),
         onupdate=lambda: datetime.now(TIMEZONE),
     )
+
+    def dto(self) -> UserDto:
+        return UserDto.model_validate(self)

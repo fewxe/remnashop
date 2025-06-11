@@ -1,18 +1,18 @@
+import logging
 import re
 from re import Match
-from typing import Any, Protocol
+from typing import Any, Optional, Union
 
+from aiogram_dialog.api.internal import TextWidget
 from aiogram_dialog.api.protocols import DialogManager
 from aiogram_dialog.widgets.common import WhenCondition
 from aiogram_dialog.widgets.text import Text
+from magic_filter import MagicFilter
 
 from app.bot.middlewares.i18n import I18nFormatter
-from app.core.constants import I18N_FORMAT_KEY
+from app.core.constants import I18N_FORMATTER_KEY
 
-
-class Values(Protocol):
-    def __getitem__(self, item: Any) -> Any:
-        raise NotImplementedError
+logger = logging.getLogger(__name__)
 
 
 def flatten_dict(data: dict[str, Any], parent_key: str = "", sep: str = "_") -> dict[str, Any]:
@@ -20,7 +20,7 @@ def flatten_dict(data: dict[str, Any], parent_key: str = "", sep: str = "_") -> 
     for key, value in data.items():
         new_key = f"{parent_key}{sep}{key}" if parent_key else key
         if isinstance(value, dict):
-            items.update(flatten_dict(value, new_key, sep=sep))
+            items.update(flatten_dict(data=value, parent_key=new_key, sep=sep))
         else:
             items[new_key] = value
     return items
@@ -40,18 +40,44 @@ def collapse_closing_tags(text: str) -> str:
     )
 
 
-def default_format_text(text: str, data: Values) -> str:
+def default_format_text(text: str, data: dict[str, Any]) -> str:
     return text.format_map(data)
 
 
 class I18nFormat(Text):
-    def __init__(self, key: str, when: WhenCondition = None) -> None:
+
+    def __init__(
+        self,
+        key: str,
+        when: Optional[WhenCondition] = None,
+        /,
+        **mapping: Union[TextWidget, MagicFilter, str, int, float, bool],
+    ) -> None:
         super().__init__(when)
         self.key = key
+        self.mapping = mapping
 
-    async def _render_text(self, data: dict, manager: DialogManager) -> str:
-        i18n_format: I18nFormatter = manager.middleware_data.get(
-            I18N_FORMAT_KEY,
+    async def _transform(self, data: dict[str, Any], manager: DialogManager) -> dict[str, Any]:
+        mapped: dict[str, Any] = {}
+
+        for key, transformer in self.mapping.items():
+            if isinstance(transformer, TextWidget):
+                mapped[key] = await transformer.render_text(data, manager)
+            elif isinstance(transformer, MagicFilter):
+                mapped[key] = transformer.resolve(data)
+            else:
+                mapped[key] = transformer
+
+        logger.debug(f"Transformed mapping: {mapped}")
+        return {**data, **mapped}
+
+    async def _render_text(self, data: dict[str, Any], manager: DialogManager) -> str:
+        format_value: I18nFormatter = manager.middleware_data.get(
+            I18N_FORMATTER_KEY,
             default_format_text,
         )
-        return collapse_closing_tags(i18n_format(self.key, flatten_dict(data)))
+
+        if self.mapping:
+            data = await self._transform(data, manager)
+
+        return collapse_closing_tags(text=format_value(self.key, data))

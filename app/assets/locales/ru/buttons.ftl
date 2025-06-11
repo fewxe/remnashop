@@ -56,6 +56,8 @@ btn-remnashop-notifications = 🔔 Уведомления
 btn-remnashop-logs = 📄 Логи
 btn-remnashop-audit = 🔍 Аудит
 
+btn-remnashop-admin = 👤 { $role } - { $id }
+
 # RemnaWave
 btn-remnawave-users = 👥 Пользователи
 btn-remnawave-hosts = 🌐 Хосты

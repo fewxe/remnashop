@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .models import Base
+from .models.sql import Base
 
 
 class UoW:

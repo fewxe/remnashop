@@ -2,8 +2,6 @@ from aiogram.types import CallbackQuery
 from aiogram_dialog.api.protocols import DialogManager, DialogProtocol
 from aiogram_dialog.widgets.kbd import Button, Keyboard
 
-from app.core.constants import AUDIT_KEY
-
 
 class Audit(Keyboard):
     def __init__(self, button: Button) -> None:
@@ -19,5 +17,6 @@ class Audit(Keyboard):
         dialog: DialogProtocol,
         manager: DialogManager,
     ) -> bool:
-        # audit: Audit = manager.middleware_data[AUDIT_KEY] # TODO: implement audit logging
+        # TODO: implement audit logging
+        # container: AppContainer = manager.middleware_data[APP_CONTAINER_KEY]
         return await self.button.process_callback(callback, dialog, manager)

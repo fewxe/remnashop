@@ -5,14 +5,15 @@ from app.bot.conditions import is_admin
 from app.bot.states import DashboardState, MenuState
 from app.bot.widgets import Banner, I18nFormat, IgnoreInput
 from app.core.enums import BannerName
+from app.db.models import UserDto
 
 
-async def getter(dialog_manager: DialogManager, **kwargs):
+async def getter(dialog_manager: DialogManager, user: UserDto, **kwargs):
     return {
-        "status": "active",
-        "devices": 1,
-        "max_devices": 3,
-        "expiry_time": "3 дня",
+        "id": str(user.telegram_id),
+        "name": user.name,
+        "balance": user.balance,
+        "status": "none",
     }
 
 

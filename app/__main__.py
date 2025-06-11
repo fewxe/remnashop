@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("Starting application")
 
-    bot: Bot = create_bot(config.bot.token.get_secret_value())
+    bot: Bot = create_bot(token=config.bot.token.get_secret_value())
     dispatcher: Dispatcher = create_dispatcher(config)
 
     application.state.bot = bot

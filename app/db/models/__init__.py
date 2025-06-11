@@ -1,7 +1,7 @@
-from .base import Base
-from .user import User
+from .dto import UserDto
+from .sql import User
 
 __all__ = [
-    "Base",
+    "UserDto",
     "User",
 ]
