@@ -39,7 +39,7 @@ class NotificationService(BaseService):
     ) -> Optional[Message]:
         i18n_formatter = self.i18n.get_formatter(locale=locale)
         message_text = i18n_formatter(text_key, kwargs)
-        message_effect_id = message_effect.value if message_effect is not None else None
+        message_effect_id = message_effect if message_effect is not None else None
         sent_message: Optional[Message] = None
 
         final_reply_markup = self._prepare_reply_markup(

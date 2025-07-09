@@ -75,18 +75,18 @@ def format_duration(
             if round_up:
                 if mod > 0 or any(divmod(remaining, u[1])[0] > 0 for u in units[i + 1 :]):
                     value = ceil(remaining / unit_seconds)
-                return f"{value} {i18n_formatter(unit.value, {'value': value})}"
+                return f"{value} {i18n_formatter(unit, {'value': value})}"
 
-            parts = [f"{value} {i18n_formatter(unit.value, {'value': value})}"]
+            parts = [f"{value} {i18n_formatter(unit, {'value': value})}"]
             remaining %= unit_seconds
             for unit2, unit_seconds2 in units[i + 1 :]:
                 value2, _ = divmod(remaining, unit_seconds2)
                 if value2 > 0:
-                    parts.append(f"{value2} {i18n_formatter(unit2.value, {'value': value2})}")
+                    parts.append(f"{value2} {i18n_formatter(unit2, {'value': value2})}")
                     remaining %= unit_seconds2
             return " ".join(parts)
 
-    return f"0 {i18n_formatter(TimeUnitKey.MINUTE.value, {'value': 0})}"
+    return f"0 {i18n_formatter(TimeUnitKey.MINUTE, {'value': 0})}"
 
 
 def format_country_code(code: str) -> str:

@@ -26,7 +26,7 @@ class DialogDataAdapter:
         data = model.model_dump()
         try:
             self.dialog_manager.dialog_data[key] = data
-            logger.debug(f"Saved model '{key}' data successfully")
+            logger.debug(f"Model '{key}' data saved successfully")
         except Exception as exception:
-            logger.error(f"Failed saving model '{key}'. Error: {exception}")
+            logger.error(f"Failed data save for model '{key}'. Error: {exception}")
         return data

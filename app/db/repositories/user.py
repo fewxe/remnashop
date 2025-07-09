@@ -1,6 +1,6 @@
 from typing import Any, Optional, cast
 
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 from sqlalchemy.sql.functions import count
 
 from app.core.enums import UserRole
@@ -12,6 +12,13 @@ from .base import BaseRepository
 class UserRepository(BaseRepository):
     async def get(self, telegram_id: int) -> Optional[User]:
         return await self._get(User, User.telegram_id == telegram_id)
+
+    async def get_by_partial_name(self, query: str) -> list[User]:
+        search_pattern = f"%{query.lower()}%"
+        conditions = [
+            func.lower(User.name).like(search_pattern),
+        ]
+        return await self._get_many(User, or_(*conditions))
 
     async def update(self, telegram_id: int, **data: Any) -> Optional[User]:
         return await self._update(

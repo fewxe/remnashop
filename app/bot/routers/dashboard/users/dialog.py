@@ -17,7 +17,7 @@ from app.bot.states import Dashboard, DashboardUsers
 from app.bot.widgets import Banner, I18nFormat, IgnoreUpdate
 from app.core.enums import BannerName
 
-from .getters import blacklist_getter
+from .getters import blacklist_getter, search_results_getter
 from .handlers import on_unblock_all, on_user_search, on_user_selected
 
 users = Window(
@@ -74,6 +74,35 @@ search = Window(
     MessageInput(func=on_user_search),
     IgnoreUpdate(),
     state=DashboardUsers.SEARCH,
+)
+
+search_results = Window(
+    Banner(BannerName.DASHBOARD),
+    I18nFormat("msg-users-search-results", count=F["count"]),
+    ScrollingGroup(
+        Select(
+            text=Format("{item.telegram_id} ({item.name})"),
+            id="user",
+            item_id_getter=lambda item: item.telegram_id,
+            items="found_users",
+            type_factory=int,
+            on_click=on_user_selected,
+        ),
+        id="scroll",
+        width=1,
+        height=7,
+        hide_on_single_page=True,
+    ),
+    Row(
+        SwitchTo(
+            text=I18nFormat("btn-back"),
+            id="back",
+            state=DashboardUsers.SEARCH,
+        ),
+    ),
+    IgnoreUpdate(),
+    state=DashboardUsers.SEARCH_RESULTS,
+    getter=search_results_getter,
 )
 
 
@@ -139,6 +168,7 @@ unblock_all = Window(
 router: Final[Dialog] = Dialog(
     users,
     search,
+    search_results,
     blacklist,
     unblock_all,
 )

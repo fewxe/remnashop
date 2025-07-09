@@ -6,6 +6,7 @@ from aiogram.types import ChatMemberUpdated
 from loguru import logger
 
 from app.core.container import AppContainer
+from app.core.utils.formatters import format_log_user
 from app.db.models.dto import UserDto
 
 router: Final[Router] = Router(name=__name__)
@@ -14,11 +15,11 @@ router: Final[Router] = Router(name=__name__)
 
 @router.my_chat_member(ChatMemberUpdatedFilter(JOIN_TRANSITION))
 async def bot_unblocked(_: ChatMemberUpdated, user: UserDto, container: AppContainer) -> None:
-    logger.info("unblock")
-    # TODO: unblock
+    logger.info(f"{format_log_user(user)} Bot unblocked")
+    await container.services.user.set_bot_blocked(user=user, blocked=False)
 
 
 @router.my_chat_member(ChatMemberUpdatedFilter(LEAVE_TRANSITION))
 async def bot_blocked(_: ChatMemberUpdated, user: UserDto, container: AppContainer) -> None:
-    logger.info("block")
-    # TODO: block
+    logger.info(f"{format_log_user(user)} Bot blocked")
+    await container.services.user.set_bot_blocked(user=user, blocked=True)

@@ -33,7 +33,7 @@ class MaintenanceService(BaseService):
 
     async def set_mode(self, mode: MaintenanceMode) -> None:
         key = MaintenanceModeKey()
-        await self.redis_repository.set(key=key, value=mode.value)
+        await self.redis_repository.set(key=key, value=mode)
 
     async def is_active(self) -> bool:
         return await self.get_current_mode() != MaintenanceMode.OFF

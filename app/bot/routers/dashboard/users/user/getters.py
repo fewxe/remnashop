@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, cast
 
 from aiogram_dialog import DialogManager
 
@@ -11,10 +11,9 @@ async def user_getter(
     container: AppContainer,
     **kwargs: Any,
 ) -> dict[str, Any]:
-    if not isinstance(dialog_manager.start_data, dict):
-        return {}
+    start_data = cast(dict[str, Any], dialog_manager.start_data)
 
-    target_telegram_id = dialog_manager.start_data["target_telegram_id"]
+    target_telegram_id = start_data["target_telegram_id"]
     target_user = await container.services.user.get(telegram_id=target_telegram_id)
 
     if not target_user:
@@ -34,10 +33,9 @@ async def role_getter(
     container: AppContainer,
     **kwargs: Any,
 ) -> dict[str, Any]:
-    if not isinstance(dialog_manager.start_data, dict):
-        return {}
+    start_data = cast(dict[str, Any], dialog_manager.start_data)
 
-    target_telegram_id = dialog_manager.start_data["target_telegram_id"]
+    target_telegram_id = start_data["target_telegram_id"]
     target_user = await container.services.user.get(telegram_id=target_telegram_id)
 
     if not target_user:

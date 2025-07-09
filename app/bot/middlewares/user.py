@@ -50,9 +50,5 @@ class UserMiddleware(EventTypedMiddleware):
 
         # TODO: Cache the last 10 users interacted with the bot
 
-        if user.is_bot_blocked:
-            logger.info(f"{format_log_user(user)} Bot unblocked")
-            await container.services.user.set_bot_blocked(user=user, blocked=False)
-
         data[USER_KEY] = user
         return await handler(event, data)

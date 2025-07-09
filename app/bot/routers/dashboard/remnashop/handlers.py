@@ -22,8 +22,8 @@ async def on_logs_requested(
     widget: Button,
     dialog_manager: DialogManager,
 ) -> None:
-    user: UserDto = dialog_manager.middleware_data[USER_KEY]
     container: AppContainer = dialog_manager.middleware_data[APP_CONTAINER_KEY]
+    user: UserDto = dialog_manager.middleware_data[USER_KEY]
 
     try:
         file = FSInputFile(
@@ -31,7 +31,7 @@ async def on_logs_requested(
             filename=f"{datetime_now().strftime('%Y-%m-%d_%H-%M-%S')}.log",
         )
     except FileNotFoundError:
-        logger.error("Log file not found")
+        logger.error(f"[{format_log_user(user)}] Log file not found at '{LOG_DIR}/{LOG_FILENAME}'")
         await container.services.notification.notify_user(
             user=user,
             text_key="ntf-error-log-not-found",
@@ -46,7 +46,7 @@ async def on_logs_requested(
         auto_delete_after=None,
         add_close_button=True,
     )
-    logger.info(f"{format_log_user(user)} Received the log file")
+    logger.info(f"[{format_log_user(user)}] Log file '{file.filename}' sent successfully")
 
 
 async def on_user_selected(
@@ -54,8 +54,11 @@ async def on_user_selected(
     widget: Button,
     sub_manager: SubManager,
 ) -> None:
-    logger.warning(type(sub_manager))
-    await start_user_window(manager=sub_manager, target_telegram_id=int(sub_manager.item_id))
+    user: UserDto = sub_manager.middleware_data[USER_KEY]
+    target_telegram_id = int(sub_manager.item_id)
+
+    logger.debug(f"[{format_log_user(user)}] User '{target_telegram_id}' selected")
+    await start_user_window(manager=sub_manager, target_telegram_id=target_telegram_id)
 
 
 async def on_user_role_removed(
@@ -63,18 +66,29 @@ async def on_user_role_removed(
     widget: Button,
     sub_manager: SubManager,
 ) -> None:
-    logger.warning(type(sub_manager))
     await sub_manager.load_data()
-    user: UserDto = sub_manager.middleware_data[USER_KEY]
     container: AppContainer = sub_manager.middleware_data[APP_CONTAINER_KEY]
-    target_user = await container.services.user.get(telegram_id=int(sub_manager.item_id))
+    user: UserDto = sub_manager.middleware_data[USER_KEY]
+    target_telegram_id = int(sub_manager.item_id)
+    target_user = await container.services.user.get(telegram_id=target_telegram_id)
 
     if not target_user:
+        logger.warning(
+            f"[{format_log_user(user)}] Attempted to remove role "
+            f"for non-existent user with ID '{target_telegram_id}'"
+        )
         return
 
     if await handle_role_switch_preconditions(user, target_user, container, sub_manager):
+        logger.debug(
+            f"[{format_log_user(user)}] Role removal for "
+            f"{format_log_user(target_user)} aborted due to pre-conditions"
+        )
         return
 
     await container.services.user.set_role(user=target_user, role=UserRole.USER)
     await reset_user_dialog(sub_manager.manager, target_user)
-    logger.info(f"{format_log_user(user)} Removed role for {format_log_user(target_user)}")
+    logger.info(
+        f"[{format_log_user(user)}] Successfully changed role for "
+        f"{format_log_user(target_user)} to '{UserRole.USER}'"
+    )

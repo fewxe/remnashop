@@ -36,6 +36,7 @@ class DashboardPromocodes(StatesGroup):
 class DashboardUsers(StatesGroup):
     MAIN = State()
     SEARCH = State()
+    SEARCH_RESULTS = State()
     RECENT_REGISTERED = State()
     RECENT_ACTIVITY = State()
     BLACKLIST = State()

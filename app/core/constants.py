@@ -27,7 +27,6 @@ RESOURCE_I18N: Final[list[str]] = [
 DIALOG_MANAGER_KEY: Final[str] = "dialog_manager"
 MIDDLEWARE_DATA_KEY: Final[str] = "middleware_data"
 APP_CONTAINER_KEY: Final[str] = "container"
-BOT_KEY: Final[str] = "bot"
 USER_KEY: Final[str] = "user"
 I18N_FORMATTER_KEY: Final[str] = "i18n_formatter"
 

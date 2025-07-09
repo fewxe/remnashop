@@ -14,8 +14,8 @@ async def start_remnawave_window(
     widget: Button,
     dialog_manager: DialogManager,
 ) -> None:
-    user: UserDto = dialog_manager.middleware_data[USER_KEY]
     container: AppContainer = dialog_manager.middleware_data[APP_CONTAINER_KEY]
+    user: UserDto = dialog_manager.middleware_data[USER_KEY]
 
     try:
         response = await container.remnawave.system.get_stats()

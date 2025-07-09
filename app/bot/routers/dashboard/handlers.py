@@ -16,8 +16,8 @@ async def on_maintenance_mode_selected(
     dialog_manager: DialogManager,
     selected_mode: MaintenanceMode,
 ) -> None:
-    user: UserDto = dialog_manager.middleware_data[USER_KEY]
     container: AppContainer = dialog_manager.middleware_data[APP_CONTAINER_KEY]
+    user: UserDto = dialog_manager.middleware_data[USER_KEY]
 
     await container.services.maintenance.set_mode(mode=selected_mode)
     logger.info(f"{format_log_user(user)} Set maintenance mode -> '{selected_mode}'")

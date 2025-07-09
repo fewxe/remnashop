@@ -19,17 +19,17 @@ def get_banner_path_and_type(name: BannerName) -> Tuple[Path, ContentType]:
     content_type: Optional[ContentType]
 
     for fmt in BannerFormat:
-        candidate_path = BANNERS_DIR / f"{name.value}.{fmt.value}"
+        candidate_path = BANNERS_DIR / f"{name}.{fmt}"
         if candidate_path.exists():
             path = candidate_path
             content_type = fmt.content_type
             logger.debug(
-                f"Determined banner path for '{name.value}': '{path}' with type '{content_type}'"
+                f"Determined banner path for '{name}': '{path}' with type '{content_type}'"
             )
             break
     else:
-        logger.warning(f"Banner file for '{name.value}' not found, using default banner")
-        path = BANNERS_DIR / f"{BannerName.DEFAULT.value}.{BannerFormat.JPG.value}"
+        logger.warning(f"Banner file for '{name}' not found, using default banner")
+        path = BANNERS_DIR / f"{BannerName.DEFAULT}.{BannerFormat.JPG}"
         content_type = BannerFormat.JPG.content_type
 
     if not path.exists():

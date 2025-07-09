@@ -22,26 +22,26 @@ class UserService(BaseService):
         if user_id is not None:
             user_cache_key: str = build_key("cache", "get_user", user_id=user_id)
             keys_to_delete.append(user_cache_key)
-            logger.info(f"Adding user_id {user_id} to cache invalidation list.")
+            logger.debug(f"Adding user_id {user_id} to cache invalidation list")
 
         # Invalidate all relevant list caches
         list_cache_keys_to_invalidate = [
-            build_key("cache", "get_by_role", role=UserRole.DEV.value),
-            build_key("cache", "get_by_role", role=UserRole.ADMIN.value),
-            build_key("cache", "get_by_role", role=UserRole.USER.value),
+            build_key("cache", "get_by_role", role=UserRole.DEV),
+            build_key("cache", "get_by_role", role=UserRole.ADMIN),
+            build_key("cache", "get_by_role", role=UserRole.USER),
             build_key("cache", "get_devs"),
             build_key("cache", "get_admins"),
             build_key("cache", "get_blocked_users"),
             build_key("cache", "count"),
         ]
         keys_to_delete.extend(list_cache_keys_to_invalidate)
-        logger.info(f"Adding {len(list_cache_keys_to_invalidate)} list keys to cache invalidation.")
+        logger.debug(f"Adding {len(list_cache_keys_to_invalidate)} list keys to cache invalidation")
 
         if keys_to_delete:
             await self.redis.delete(*keys_to_delete)
-            logger.info(f"Total {len(keys_to_delete)} cache keys invalidated in one operation.")
+            logger.debug(f"Total {len(keys_to_delete)} cache keys invalidated in one operation")
         else:
-            logger.info("No cache keys to invalidate.")
+            logger.debug("No cache keys to invalidate")
 
     async def create(self, aiogram_user: AiogramUser) -> UserDto:
         async with UnitOfWork(self.session_pool) as uow:
@@ -64,6 +64,11 @@ class UserService(BaseService):
         async with UnitOfWork(self.session_pool) as uow:
             db_user = await uow.repository.users.get(telegram_id=telegram_id)
             return db_user.dto() if db_user else None
+
+    async def get_by_partial_name(self, query: str) -> list[UserDto]:
+        async with UnitOfWork(self.session_pool) as uow:
+            db_users = await uow.repository.users.get_by_partial_name(query=query)
+            return [user.dto() for user in db_users]
 
     async def update(self, user: UserDto) -> Optional[UserDto]:
         async with UnitOfWork(self.session_pool) as uow:
@@ -110,7 +115,7 @@ class UserService(BaseService):
             admins = await uow.repository.users.filter_by_role(UserRole.ADMIN)
             return [admin.dto() for admin in admins]
 
-    @redis_cache(prefix="get_admins", ttl=TIME_10M)
+    @redis_cache(prefix="get_blocked_users", ttl=TIME_10M)
     async def get_blocked_users(self) -> list[UserDto]:
         async with UnitOfWork(self.session_pool) as uow:
             users = await uow.repository.users.filter_by_blocked()

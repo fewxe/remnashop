@@ -1,9 +1,26 @@
-from typing import Any
+from typing import Any, cast
 
 from aiogram_dialog import DialogManager
 
 from app.core.container import AppContainer
 from app.core.utils.formatters import format_percent
+from app.db.models.dto.user import UserDto
+
+
+async def search_results_getter(
+    dialog_manager: DialogManager,
+    **kwargs: Any,
+) -> dict[str, Any]:
+    start_data = cast(dict[str, Any], dialog_manager.start_data)
+    found_users_data: list[str] = start_data["found_users"]
+    found_users: list[UserDto] = [
+        UserDto.model_validate_json(json_string) for json_string in found_users_data
+    ]
+
+    return {
+        "found_users": found_users,
+        "count": len(found_users),
+    }
 
 
 async def blacklist_getter(
