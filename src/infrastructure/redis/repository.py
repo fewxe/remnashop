@@ -5,8 +5,8 @@ from redis.asyncio import Redis
 from redis.typing import ExpiryT
 
 from src.core.config import AppConfig
-from src.core.utils import mjson
-from src.core.utils.key_builder import StorageKey
+from src.core.storage.key_builder import StorageKey
+from src.core.utils import json_utils
 
 T = TypeVar("T", bound=Any)
 
@@ -30,13 +30,13 @@ class RedisRepository:
         value: Optional[Any] = await self.client.get(key.pack())
         if value is None:
             return default
-        value = mjson.decode(value)
+        value = json_utils.decode(value)
         return TypeAdapter[T](validator).validate_python(value)
 
     async def set(self, key: StorageKey, value: Any, ex: Optional[ExpiryT] = None) -> None:
         if isinstance(value, BaseModel):
             value = value.model_dump(exclude_defaults=True)
-        await self.client.set(name=key.pack(), value=mjson.encode(value), ex=ex)
+        await self.client.set(name=key.pack(), value=json_utils.encode(value), ex=ex)
 
     async def exists(self, key: StorageKey) -> bool:
         return cast(bool, await self.client.exists(key.pack()))

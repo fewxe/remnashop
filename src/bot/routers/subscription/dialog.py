@@ -3,9 +3,9 @@ from aiogram_dialog.widgets.kbd import Button, Column, Group, Row, Select, Start
 from aiogram_dialog.widgets.text import Format
 from magic_filter import F
 
-from src.bot.states import MainMenu, Subscription
+from src.bot.states import Connect, MainMenu, Subscription
 from src.bot.widgets import Banner, I18nFormat, IgnoreUpdate
-from src.core.enums import BannerName, PaymentGatewayType
+from src.core.enums import BannerName, PaymentGatewayType, PurchaseType
 
 from .getters import (
     confirm_getter,
@@ -13,6 +13,7 @@ from .getters import (
     payment_method_getter,
     plans_getter,
     subscription_getter,
+    succees_payment_getter,
 )
 from .handlers import (
     on_duration_selected,
@@ -27,9 +28,29 @@ subscription = Window(
     I18nFormat("msg-subscription-main"),
     Row(
         Button(
-            text=I18nFormat("btn-subscription-purchase"),
-            id="plans",
+            text=I18nFormat("btn-subscription-new"),
+            id=PurchaseType.NEW,
             on_click=on_subscription_plans,
+            when=~F["has_active_subscription"],
+        ),
+        Button(
+            text=I18nFormat("btn-subscription-renew"),
+            id=PurchaseType.RENEW,
+            on_click=on_subscription_plans,
+            when=F["has_active_subscription"],
+        ),
+        Button(
+            text=I18nFormat("btn-subscription-change"),
+            id=PurchaseType.CHANGE,
+            on_click=on_subscription_plans,
+            when=F["has_active_subscription"],
+        ),
+    ),
+    Row(
+        SwitchTo(
+            text=I18nFormat("btn-subscription-promocode"),
+            id="promocode",
+            state=Subscription.PROMOCODE,
         ),
     ),
     Row(
@@ -107,7 +128,7 @@ duration = Window(
             text=I18nFormat("btn-back"),
             id="back_main",
             state=Subscription.MAIN,
-            when=F["only_single_plan"],
+            when=(F["only_single_plan"]) | (F["purchase_type"] == PurchaseType.RENEW),
         ),
     ),
     Row(
@@ -201,10 +222,51 @@ confirm = Window(
     getter=confirm_getter,
 )
 
+succees_payment = Window(
+    Banner(BannerName.SUBSCRIPTION),
+    I18nFormat("msg-subscription-success"),
+    Row(
+        Start(
+            text=I18nFormat("btn-subscription-connect"),
+            id="connect",
+            state=Connect.MAIN,
+            mode=StartMode.RESET_STACK,
+        ),
+    ),
+    Row(
+        Start(
+            text=I18nFormat("btn-back-menu"),
+            id="back_menu",
+            state=MainMenu.MAIN,
+            mode=StartMode.RESET_STACK,
+        ),
+    ),
+    IgnoreUpdate(),
+    state=Subscription.SUCCESS,
+    getter=succees_payment_getter,
+)
+
+failed_payment = Window(
+    Banner(BannerName.SUBSCRIPTION),
+    I18nFormat("msg-subscription-failed"),
+    Row(
+        Start(
+            text=I18nFormat("btn-back-menu"),
+            id="back_menu",
+            state=MainMenu.MAIN,
+            mode=StartMode.RESET_STACK,
+        ),
+    ),
+    IgnoreUpdate(),
+    state=Subscription.FAILED,
+)
+
 router = Dialog(
     subscription,
     plans,
     duration,
     payment_method,
     confirm,
+    succees_payment,
+    failed_payment,
 )

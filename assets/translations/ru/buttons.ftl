@@ -15,6 +15,8 @@ btn-menu-invite = 👥 Пригласить
 btn-menu-support = 🆘 Поддержка
 btn-menu-dashboard = 🛠 Панель управления
 
+# Connect
+btn-connect = 🚀 Подключиться
 
 # Dashboard
 btn-dashboard-statistics = 📊 Статистика
@@ -189,9 +191,10 @@ btn-remnawave-inbounds = 🔌 Инбаунды
 
 
 # Subscription
-btn-subscription-purchase = 💸 Купить подписку
-btn-subscription-renew = 🔄 Продлить подписку
-btn-subscription-change = 🔃 Изменить подписку
+btn-subscription-new = 💸 Купить подписку
+btn-subscription-renew = 🔄 Продлить
+btn-subscription-change = 🔃 Изменить
+btn-subscription-promocode = 🎟 Активировать промокод
 
 btn-subscription-plan = { $name }
 btn-subscription-duration = { $period } | { $price } { $currency }
@@ -202,3 +205,4 @@ btn-subscription-get = 🆓 Получить бесплатно
 btn-subscription-back-plans = ⬅️ Назад к выбору плана
 btn-subscription-back-duration = ⬅️ Изменить длительность
 btn-subscription-back-payment-method = ⬅️ Изменить способ оплаты
+btn-subscription-connect = 🚀 Подключиться

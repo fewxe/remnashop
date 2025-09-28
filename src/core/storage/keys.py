@@ -1,4 +1,4 @@
-from src.core.utils.key_builder import StorageKey
+from src.core.storage.key_builder import StorageKey
 
 
 class WebhookLockKey(StorageKey, prefix="webhook_lock"):

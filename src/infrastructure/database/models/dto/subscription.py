@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
-    from .plan import PlanSnapshotDto
+    from .plan import PlanDto, PlanSnapshotDto
     from .user import BaseUserDto
 
 from datetime import datetime, timedelta
@@ -36,6 +36,21 @@ class BaseSubscriptionDto(TrackableDto):
     created_at: Optional[datetime] = Field(default=None, frozen=True)
     updated_at: Optional[datetime] = Field(default=None, frozen=True)
 
+    def has_same_plan(self, plan: "PlanDto") -> bool:
+        if plan is None or self.plan is None:
+            return False
+
+        return (
+            self.plan.id == plan.id
+            and self.plan.name == plan.name
+            and self.plan.type == plan.type
+            and self.plan.traffic_limit == plan.traffic_limit
+            and self.plan.device_limit == plan.device_limit
+        )
+
+    def find_matching_plan(self, plans: list[PlanDto]) -> Optional[PlanDto]:
+        return next((plan for plan in plans if self.has_same_plan(plan)), None)
+
 
 class SubscriptionDto(BaseSubscriptionDto):
-    user: "Optional[BaseUserDto]" = None
+    user: Optional["BaseUserDto"] = None

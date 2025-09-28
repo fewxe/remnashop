@@ -3,7 +3,7 @@ from aiogram_dialog.utils import remove_intent_id
 from loguru import logger
 
 from src.core.enums import AccessMode
-from src.core.storage_keys import AccessModeKey, AccessWaitListKey
+from src.core.storage.keys import AccessModeKey, AccessWaitListKey
 from src.core.utils.formatters import format_log_user
 from src.infrastructure.database.models.dto import UserDto
 

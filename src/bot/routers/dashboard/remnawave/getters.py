@@ -12,7 +12,7 @@ from remnawave.models import (
     GetStatsResponseDto,
 )
 
-from src.core.translator_kwargs import get_translated_kwargs
+from src.core.i18n.translator import get_translated_kwargs
 from src.core.utils.formatters import (
     format_country_code,
     format_percent,

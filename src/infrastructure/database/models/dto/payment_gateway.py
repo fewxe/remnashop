@@ -21,7 +21,7 @@ class PaymentGatewayDto(TrackableDto):
     currency: Currency
     is_active: bool
 
-    settings: "Optional[AnyGatewaySettingsDto]" = None
+    settings: Optional["AnyGatewaySettingsDto"] = None
 
 
 class GatewaySettingsDto(TrackableDto):

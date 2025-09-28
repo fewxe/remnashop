@@ -7,7 +7,7 @@ from loguru import logger
 
 from src.bot.states import Subscription
 from src.core.constants import USER_KEY
-from src.core.enums import PaymentGatewayType
+from src.core.enums import PaymentGatewayType, PurchaseType
 from src.core.utils.adapter import DialogDataAdapter
 from src.core.utils.message_payload import MessagePayload
 from src.infrastructure.database.models.dto import PlanDto, UserDto
@@ -29,10 +29,13 @@ async def on_subscription_plans(
     plans: list[PlanDto] = await plan_service.get_available_plans(user)
     gateways = await payment_gateway_service.filter_active()
 
+    purchase_type = PurchaseType(callback.data or PurchaseType.NEW)
+    dialog_manager.dialog_data["purchase_type"] = purchase_type
+
     if not plans:
         await notification_service.notify_user(
-            user,
-            MessagePayload(i18n_key="ntf-subscription-plans-not-available"),
+            user=user,
+            payload=MessagePayload(i18n_key="ntf-subscription-plans-not-available"),
         )
         return
 
@@ -43,8 +46,28 @@ async def on_subscription_plans(
         )
         return
 
+    adapter = DialogDataAdapter(dialog_manager)
+
+    if purchase_type == PurchaseType.RENEW:
+        if user.current_subscription:
+            matched_plan = user.current_subscription.find_matching_plan(plans)
+            logger.debug(f"Matched plan for renewal: {matched_plan}")
+            if matched_plan:
+                adapter.save(matched_plan)
+                dialog_manager.dialog_data["only_single_plan"] = True
+                await dialog_manager.switch_to(state=Subscription.DURATION)
+                return
+            else:
+                logger.debug(
+                    f"User {user.id} attempted to renew subscription but no matching plan found",
+                )
+                await notification_service.notify_user(
+                    user=user,
+                    payload=MessagePayload(i18n_key="ntf-subscription-renew-plan-mismatch"),
+                )
+                return
+
     if len(plans) == 1:
-        adapter = DialogDataAdapter(dialog_manager)
         adapter.save(plans[0])
         dialog_manager.dialog_data["only_single_plan"] = True
         await dialog_manager.switch_to(state=Subscription.DURATION)

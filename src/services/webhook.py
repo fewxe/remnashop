@@ -4,8 +4,8 @@ from aiogram.methods import SetWebhook
 from aiogram.types import WebhookInfo
 from loguru import logger
 
-from src.core.encryption import get_webhook_hash
-from src.core.storage_keys import WebhookLockKey
+from src.core.security.crypto import get_webhook_hash
+from src.core.storage.keys import WebhookLockKey
 from src.core.utils.time import datetime_now
 
 from .base import BaseService

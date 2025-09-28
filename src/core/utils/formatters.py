@@ -1,17 +1,18 @@
 from __future__ import annotations
 
-from calendar import monthrange
-from datetime import datetime, timedelta
+import re
+from re import Match
 from typing import TYPE_CHECKING, Final, Optional, Union
-
-from src.core.utils.time import datetime_now
 
 if TYPE_CHECKING:
     from src.infrastructure.database.models.dto import UserDto
 
+from calendar import monthrange
+from datetime import datetime, timedelta
 from decimal import ROUND_HALF_UP, ROUND_UP, Decimal
 
-from src.core.i18n_keys import ByteUnitKey, TimeUnitKey, UtilKey
+from src.core.i18n.keys import ByteUnitKey, TimeUnitKey, UtilKey
+from src.core.utils.time import datetime_now
 
 
 def format_log_user(user: UserDto) -> str:
@@ -173,3 +174,17 @@ def i18n_format_expire_time(expiry_time: timedelta) -> list[tuple[str, dict[str,
         parts.append((TimeUnitKey.MINUTE, {"value": minutes}))
 
     return parts or [(TimeUnitKey.MINUTE, {"value": 1})]
+
+
+def i18n_format_collapse_tags(text: str) -> str:
+    def replacer(match: Match[str]) -> str:
+        tag = match.group(1)
+        content = match.group(2).rstrip()
+        return f"<{tag}>{content}</{tag}>"
+
+    return re.sub(
+        r"<(\w+)>[\n\r]+(.*?)[\n\r]+</\1>",
+        replacer,
+        text,
+        flags=re.DOTALL,
+    )

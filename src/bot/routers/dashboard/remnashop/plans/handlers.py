@@ -59,7 +59,7 @@ async def on_plan_removed(
     key = f"delete_confirm_{plan_id}"
 
     now = datetime_now()
-    last_click_str: str | None = sub_manager.dialog_data.get(key)
+    last_click_str: Optional[str] = sub_manager.dialog_data.get(key)
 
     if last_click_str:
         last_click = datetime.fromisoformat(last_click_str.replace("Z", "+00:00"))

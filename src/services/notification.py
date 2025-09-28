@@ -17,8 +17,9 @@ from src.core.enums import (
     UserNotificationType,
     UserRole,
 )
-from src.core.storage_keys import SystemNotificationSettingsKey, UserNotificationSettingsKey
-from src.core.translator_kwargs import get_translated_kwargs
+from src.core.i18n.translator import get_translated_kwargs
+from src.core.storage.keys import SystemNotificationSettingsKey, UserNotificationSettingsKey
+from src.core.utils.formatters import i18n_format_collapse_tags
 from src.core.utils.message_payload import MessagePayload
 from src.core.utils.types import AnyKeyboard, AnyNotification
 from src.infrastructure.database.models.dto import UserDto
@@ -326,7 +327,7 @@ class NotificationService(BaseService):
 
         i18n = self.translator_hub.get_translator_by_locale(locale=locale)
         kwargs = get_translated_kwargs(i18n, i18n_kwargs)
-        return i18n.get(i18n_key, **kwargs)
+        return i18n_format_collapse_tags(i18n.get(i18n_key, **kwargs))
 
     def _get_temp_dev(self) -> UserDto:
         temp_dev = UserDto(

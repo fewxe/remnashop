@@ -16,8 +16,8 @@ from src.core.constants import (
     TIME_10M,
 )
 from src.core.enums import Locale, UserRole
-from src.core.storage_keys import RecentActivityUsersKey, RecentRegisteredUsersKey
-from src.core.utils.key_builder import StorageKey, build_key
+from src.core.storage.key_builder import StorageKey, build_key
+from src.core.storage.keys import RecentActivityUsersKey, RecentRegisteredUsersKey
 from src.infrastructure.database import UnitOfWork
 from src.infrastructure.database.models.dto import UserDto
 from src.infrastructure.database.models.sql import User
@@ -58,7 +58,7 @@ class UserService(BaseService):
         db_created_user = await self.uow.repository.users.create(db_user)
 
         await self.add_to_recent_registered(user.telegram_id)
-        await self._clear_user_cache(user.telegram_id)
+        await self.clear_user_cache(user.telegram_id)
 
         return UserDto.from_model(db_created_user)  # type: ignore[return-value]
 
@@ -74,7 +74,7 @@ class UserService(BaseService):
         )
 
         if db_updated_user:
-            await self._clear_user_cache(db_updated_user.telegram_id)
+            await self.clear_user_cache(db_updated_user.telegram_id)
 
         return UserDto.from_model(db_updated_user)
 
@@ -119,7 +119,7 @@ class UserService(BaseService):
         result = await self.uow.repository.users.delete(user.telegram_id)
 
         if result:
-            await self._clear_user_cache(user.telegram_id)
+            await self.clear_user_cache(user.telegram_id)
             await self._remove_from_recent_registered(user.telegram_id)
             await self._remove_from_recent_activity(user.telegram_id)
 
@@ -149,7 +149,7 @@ class UserService(BaseService):
             user.telegram_id,
             **user.changed_data,
         )
-        await self._clear_user_cache(user.telegram_id)
+        await self.clear_user_cache(user.telegram_id)
 
     async def set_bot_blocked(self, user: UserDto, blocked: bool) -> None:
         user.is_bot_blocked = blocked
@@ -157,7 +157,7 @@ class UserService(BaseService):
             user.telegram_id,
             **user.changed_data,
         )
-        await self._clear_user_cache(user.telegram_id)
+        await self.clear_user_cache(user.telegram_id)
 
     async def set_role(self, user: UserDto, role: UserRole) -> None:
         user.role = role
@@ -165,7 +165,7 @@ class UserService(BaseService):
             user.telegram_id,
             **user.changed_data,
         )
-        await self._clear_user_cache(user.telegram_id)
+        await self.clear_user_cache(user.telegram_id)
 
     #
 
@@ -244,11 +244,11 @@ class UserService(BaseService):
             telegram_id=telegram_id,
             current_subscription_id=subscription_id,
         )
-        await self._clear_user_cache(telegram_id)
+        await self.clear_user_cache(telegram_id)
 
     #
 
-    async def _clear_user_cache(self, telegram_id: int) -> None:
+    async def clear_user_cache(self, telegram_id: int) -> None:
         user_cache_key: str = build_key("cache", "get_user", telegram_id)
         await self.redis_client.delete(user_cache_key)
         await self._clear_list_caches()

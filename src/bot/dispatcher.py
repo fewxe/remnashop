@@ -7,7 +7,7 @@ from src.bot.filters import setup_global_filters
 from src.bot.middlewares import setup_middlewares
 from src.bot.routers import setup_error_handlers, setup_routers
 from src.core.config import AppConfig
-from src.core.utils import mjson
+from src.core.utils import json_utils
 
 
 def create_dispatcher(config: AppConfig) -> Dispatcher:
@@ -18,8 +18,8 @@ def create_dispatcher(config: AppConfig) -> Dispatcher:
                 with_bot_id=True,
                 with_destiny=True,
             ),
-            json_loads=mjson.decode,
-            json_dumps=mjson.encode,
+            json_loads=json_utils.decode,
+            json_dumps=json_utils.encode,
         ),
         config=config,  # for banners
     )

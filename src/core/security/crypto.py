@@ -3,7 +3,7 @@ import hashlib
 from cryptography.fernet import Fernet
 
 from src.core.config import AppConfig
-from src.core.utils import mjson
+from src.core.utils import json_utils
 
 config = AppConfig.get()
 _cipher_suite = Fernet(config.crypt_key.get_secret_value().encode())
@@ -18,4 +18,4 @@ def decrypt(data: str) -> str:
 
 
 def get_webhook_hash(webhook_data: dict) -> str:
-    return hashlib.sha256(mjson.bytes_encode(webhook_data)).hexdigest()
+    return hashlib.sha256(json_utils.bytes_encode(webhook_data)).hexdigest()

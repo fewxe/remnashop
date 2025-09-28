@@ -18,6 +18,10 @@ class PlanSnapshotDto(TrackableDto):
     duration: int
     squad_ids: list[UUID]
 
+    @property
+    def is_unlimited_duration(self) -> bool:
+        return self.duration == -1
+
 
 class PlanDto(TrackableDto):
     id: Optional[int] = Field(default=None, frozen=True)
@@ -35,7 +39,7 @@ class PlanDto(TrackableDto):
     allowed_user_ids: list[int] = []
     squad_ids: list[UUID] = []
 
-    durations: "list[PlanDurationDto]" = []
+    durations: list["PlanDurationDto"] = []
 
     @property
     def is_unlimited_traffic(self) -> bool:
@@ -54,7 +58,7 @@ class PlanDurationDto(TrackableDto):
 
     days: int
 
-    prices: "list[PlanPriceDto]" = []
+    prices: list["PlanPriceDto"] = []
 
     @property
     def is_unlimited(self) -> bool:

@@ -1,9 +1,9 @@
+from decimal import Decimal
 from typing import Any, Optional
 
 from aiogram_dialog import DialogManager
 from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
-from loguru import logger
 from remnawave import RemnawaveSDK
 from remnawave.models import GetAllInternalSquadsResponseDto
 
@@ -34,10 +34,6 @@ async def plans_getter(
     }
 
 
-def generate_prices(price: float) -> list[PlanPriceDto]:
-    return [PlanPriceDto(currency=currency, price=price) for currency in Currency]
-
-
 async def plan_getter(dialog_manager: DialogManager, **kwargs: Any) -> dict[str, Any]:
     adapter = DialogDataAdapter(dialog_manager)
     plan = adapter.load(PlanDto)
@@ -45,8 +41,38 @@ async def plan_getter(dialog_manager: DialogManager, **kwargs: Any) -> dict[str,
     if plan is None:
         plan = PlanDto(
             durations=[
-                PlanDurationDto(days=7, prices=generate_prices(100)),
-                PlanDurationDto(days=30, prices=generate_prices(100)),
+                PlanDurationDto(
+                    days=7,
+                    prices=[
+                        PlanPriceDto(currency=Currency.USD, price=Decimal(0.5)),
+                        PlanPriceDto(currency=Currency.XTR, price=Decimal(30)),
+                        PlanPriceDto(currency=Currency.RUB, price=Decimal(50)),
+                    ],
+                ),
+                PlanDurationDto(
+                    days=30,
+                    prices=[
+                        PlanPriceDto(currency=Currency.USD, price=Decimal(1)),
+                        PlanPriceDto(currency=Currency.XTR, price=Decimal(60)),
+                        PlanPriceDto(currency=Currency.RUB, price=Decimal(100)),
+                    ],
+                ),
+                PlanDurationDto(
+                    days=365,
+                    prices=[
+                        PlanPriceDto(currency=Currency.USD, price=Decimal(10)),
+                        PlanPriceDto(currency=Currency.XTR, price=Decimal(600)),
+                        PlanPriceDto(currency=Currency.RUB, price=Decimal(1000)),
+                    ],
+                ),
+                PlanDurationDto(
+                    days=-1,
+                    prices=[
+                        PlanPriceDto(currency=Currency.USD, price=Decimal(100)),
+                        PlanPriceDto(currency=Currency.XTR, price=Decimal(6000)),
+                        PlanPriceDto(currency=Currency.RUB, price=Decimal(10000)),
+                    ],
+                ),
             ],
         )
         adapter.save(plan)

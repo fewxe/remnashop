@@ -48,4 +48,4 @@ class BaseTransactionDto(TrackableDto):
 
 
 class TransactionDto(BaseTransactionDto):
-    user: "Optional[BaseUserDto]" = None
+    user: Optional["BaseUserDto"] = None

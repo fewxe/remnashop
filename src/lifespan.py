@@ -59,7 +59,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await send_system_notification_task.kiq(
         ntf_type=SystemNotificationType.BOT_LIFETIME,
         i18n_key="ntf-event-bot-startup",
-        i18n_kwargs={"mode": access_mode},
+        i18n_kwargs={"access_mode": access_mode},
     )
     await send_remnashop_notification_task.kiq()
 

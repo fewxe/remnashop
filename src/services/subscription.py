@@ -68,8 +68,17 @@ class SubscriptionService(BaseService):
         return SubscriptionDto.from_model_list(db_subscription)
 
     async def update(self, subscription: SubscriptionDto) -> Optional[SubscriptionDto]:
+        data = subscription.changed_data.copy()
+
+        if "plan" in data:
+            data["plan"] = subscription.plan.model_dump(mode="json")
+
         db_updated_subscription = await self.uow.repository.subscriptions.update(
             subscription_id=subscription.id,  # type: ignore[arg-type]
-            **subscription.changed_data,
+            **data,
         )
+
+        if subscription.user:
+            await self.user_service.clear_user_cache(telegram_id=subscription.user.telegram_id)
+
         return SubscriptionDto.from_model(db_updated_subscription)

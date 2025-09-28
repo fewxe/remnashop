@@ -1,5 +1,3 @@
-import re
-from re import Match
 from typing import Any, Optional, Union
 
 from aiogram_dialog.api.internal import TextWidget
@@ -12,21 +10,8 @@ from loguru import logger
 from magic_filter import MagicFilter
 
 from src.core.constants import CONTAINER_KEY
-from src.core.translator_kwargs import get_translated_kwargs
-
-
-def collapse_closing_tags(text: str) -> str:
-    def replacer(match: Match[str]) -> str:
-        tag = match.group(1)
-        content = match.group(2).rstrip()
-        return f"<{tag}>{content}</{tag}>"
-
-    return re.sub(
-        r"<(\w+)>[\n\r]+(.*?)[\n\r]+</\1>",
-        replacer,
-        text,
-        flags=re.DOTALL,
-    )
+from src.core.i18n.translator import get_translated_kwargs
+from src.core.utils.formatters import i18n_format_collapse_tags
 
 
 def default_format_text(text: str, data: dict[str, Any]) -> str:
@@ -71,4 +56,4 @@ class I18nFormat(Text):
             data = await self._transform(data, dialog_manager)
 
         data = get_translated_kwargs(i18n, data)
-        return collapse_closing_tags(text=i18n.get(self.key, **data))
+        return i18n_format_collapse_tags(text=i18n.get(self.key, **data))

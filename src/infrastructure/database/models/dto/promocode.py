@@ -24,12 +24,12 @@ class PromocodeDto(TrackableDto):
     is_active: bool
 
     reward: Optional[int] = None
-    plan: "Optional[PlanSnapshotDto]" = None
+    plan: Optional["PlanSnapshotDto"] = None
 
     lifetime: Optional[int] = None
     max_activations: Optional[int] = None
 
-    activations: "list[PromocodeActivationDto]" = []
+    activations: list["PromocodeActivationDto"] = []
 
     created_at: Optional[datetime] = Field(default=None, frozen=True)
     updated_at: Optional[datetime] = Field(default=None, frozen=True)
@@ -81,5 +81,5 @@ class PromocodeActivationDto(BaseDto):
 
     activated_at: Optional[datetime] = Field(default=None, frozen=True)
 
-    promocode: "Optional[PromocodeDto]" = None
-    user: "Optional[BaseUserDto]" = None
+    promocode: Optional["PromocodeDto"] = None
+    user: Optional["BaseUserDto"] = None

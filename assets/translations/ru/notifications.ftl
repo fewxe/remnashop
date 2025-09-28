@@ -36,11 +36,7 @@ ntf-event-bot-startup =
     <b>🔅 Событие: Бот запущен!</b>
 
     <blockquote>
-    • Режим обслуживания: <b>{ $mode ->
-        [GLOBAL] включен (глобальный)
-        [PURCHASE] включен (платежи)
-        *[OFF] выключен
-    }</b>
+    • Режим доступа: <b>{ access-mode }</b>
     </blockquote>
 
 ntf-event-bot-shutdown =
@@ -93,7 +89,7 @@ ntf-event-payment-info-plan =
 
 ntf-event-payment-info-previous-plan =
     <blockquote>
-    • План: <code>{ $previous_plan_name }</code> -> <code>{ $plan_name }</code> 
+    • План: <code>{ $previous_plan_name }</code> -> <code>{ $plan_name }</code>
     • Тип: <b>{ $previous_plan_type }</b> -> <b>{ plan-type }</b>
     • Лимит трафика: <b>{ $previous_plan_traffic_limit } { unit-gigabyte }</b> -> <b>{ $plan_traffic_limit } { unit-gigabyte }</b>
     • Лимит устройств: <b>{ $previous_plan_device_limit }</b> -> <b>{ $plan_device_limit }</b>
@@ -170,3 +166,4 @@ ntf-gateway-test-payment-error = <i>❌ Произошла ошибка при �
 
 ntf-subscription-plans-not-available = <i>❌ Нет доступных планов</i>
 ntf-subscription-gateways-not-available = <i>❌ Нет доступных платежных систем</i>
+ntf-subscription-renew-plan-mismatch = <i>❌ Ваш план устарел и не доступен для продления</i>

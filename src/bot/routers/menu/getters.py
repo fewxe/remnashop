@@ -18,25 +18,29 @@ async def menu_getter(
     plan_service: FromDishka[PlanService],
     **kwargs: Any,
 ) -> dict[str, Any]:
-    # remna_user = await remnawave.users.get_user_by_username(user.remnaname)
-    # plan = await plan_service.get(plan_id=int(remna_user.tag.split("_")[-1]))
+    if not user.current_subscription:
+        return {
+            "id": str(user.telegram_id),
+            "name": user.name,
+            "status": None,
+            "is_privileged": user.is_privileged,
+        }
 
-    # logger.critical(remna_user)
-    # logger.critical(plan)
-
-    subscription = user.current_subscription
+    expiry_time = (
+        i18n_format_limit(user.current_subscription.plan.duration)
+        if user.current_subscription.plan.is_unlimited_duration
+        else i18n_format_expire_time(user.current_subscription.expiry_time)
+        if user.current_subscription.expiry_time
+        else "N/A"
+    )
 
     return {
         "id": str(user.telegram_id),
         "name": user.name,
-        "status": subscription.status if subscription else None,
-        "type": subscription.plan.type if subscription else None,
-        "traffic_limit": i18n_format_limit(subscription.plan.traffic_limit)
-        if subscription
-        else None,
-        "device_limit": i18n_format_limit(subscription.plan.device_limit) if subscription else None,
-        "expiry_time": i18n_format_expire_time(subscription.expiry_time)
-        if subscription and subscription.expiry_time
-        else None,
+        "status": user.current_subscription.status,
+        "type": user.current_subscription.plan.type,
+        "traffic_limit": i18n_format_limit(user.current_subscription.plan.traffic_limit),
+        "device_limit": i18n_format_limit(user.current_subscription.plan.device_limit),
+        "expiry_time": expiry_time,
         "is_privileged": user.is_privileged,
     }

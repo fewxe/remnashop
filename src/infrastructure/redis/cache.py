@@ -7,7 +7,7 @@ from redis.asyncio import Redis
 from redis.typing import ExpiryT
 
 from src.core.constants import TIME_1M
-from src.core.utils import mjson
+from src.core.utils import json_utils
 
 T = TypeVar("T", bound=Any)
 P = ParamSpec("P")
@@ -40,13 +40,13 @@ def redis_cache(
                 if cached_value is not None:
                     logger.debug(f"Cache hit for key: {key}")
                     # Decode the bytes and then parse the JSON string
-                    return type_adapter.validate_python(mjson.decode(cached_value.decode()))
+                    return type_adapter.validate_python(json_utils.decode(cached_value.decode()))
 
                 logger.debug(f"Cache miss for key: {key}. Executing function")
                 result: T = await func(*args, **kwargs)
 
                 # Serialize the result to a JSON string before caching
-                cached_result: str = mjson.encode(type_adapter.dump_python(result))
+                cached_result: str = json_utils.encode(type_adapter.dump_python(result))
                 await redis.setex(key, ttl, cached_result)
 
                 return result

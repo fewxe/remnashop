@@ -1,15 +1,15 @@
-from typing import Any
+from typing import Any, cast
 
 from aiogram_dialog import DialogManager
 from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
 from fluentogram import TranslatorRunner
+from loguru import logger
 
-from src.bot.states import Subscription
 from src.core.constants import USER_KEY
 from src.core.enums import PurchaseType
 from src.core.utils.adapter import DialogDataAdapter
-from src.core.utils.formatters import i18n_format_days, i18n_format_limit
+from src.core.utils.formatters import i18n_format_days, i18n_format_expire_time, i18n_format_limit
 from src.infrastructure.database.models.dto import PlanDto, PlanSnapshotDto, UserDto
 from src.services.payment_gateway import PaymentGatewayService
 from src.services.plan import PlanService
@@ -21,7 +21,11 @@ async def subscription_getter(
     dialog_manager: DialogManager,
     **kwargs: Any,
 ) -> dict[str, Any]:
-    return {}
+    user: UserDto = dialog_manager.middleware_data[USER_KEY]
+
+    return {
+        "has_active_subscription": user.current_subscription is not None,
+    }
 
 
 @inject
@@ -164,12 +168,13 @@ async def confirm_getter(
 
     price = duration.get_price(payment_gateway.currency)
     pricing = PricingService.calculate(user, price, payment_gateway.currency)
+    purchase_type = dialog_manager.dialog_data["purchase_type"]
 
     result = await payment_gateway_service.create_payment(
         user=user,
         plan=transaction_plan,
         pricing=pricing,
-        purchase_type=PurchaseType.NEW,  # TODO: Implement types logic
+        purchase_type=purchase_type,
         gateway_type=selected_payment_method,
     )
     dialog_manager.dialog_data["payment_id"] = result.payment_id
@@ -190,4 +195,35 @@ async def confirm_getter(
         "currency": payment_gateway.currency.symbol,
         "url": result.pay_url,
         "only_single_gateway": len(gateways) == 1,
+    }
+
+
+@inject
+async def succees_payment_getter(
+    dialog_manager: DialogManager,
+    plan_service: FromDishka[PlanService],
+    **kwargs: Any,
+) -> dict[str, Any]:
+    user: UserDto = dialog_manager.middleware_data[USER_KEY]
+    start_data = cast(dict[str, Any], dialog_manager.start_data)
+    purchase_type: PurchaseType = start_data["purchase_type"]
+
+    if not user.current_subscription:
+        return {}
+
+    expiry_time = (
+        i18n_format_limit(user.current_subscription.plan.duration)
+        if user.current_subscription.plan.is_unlimited_duration
+        else i18n_format_expire_time(user.current_subscription.expiry_time)
+        if user.current_subscription.expiry_time
+        else "N/A"
+    )
+
+    return {
+        "purchase_type": purchase_type,
+        "plan_name": user.current_subscription.plan.name,
+        "traffic_limit": i18n_format_limit(user.current_subscription.plan.traffic_limit),
+        "device_limit": i18n_format_limit(user.current_subscription.plan.device_limit),
+        "expiry_time": expiry_time,
+        "added_duration": i18n_format_days(user.current_subscription.plan.duration),
     }

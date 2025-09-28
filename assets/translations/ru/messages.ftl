@@ -1,13 +1,16 @@
 # Menu
-msg-menu-subscription =
-    <b>💳 Подписка:</b>
-    { $status ->
-    [ACTIVE]
+msg-subscription =
     <blockquote>
     • <b>Лимит трафика</b>: { $traffic_limit } { unit-gigabyte }
     • <b>Лимит устройств</b>: { $device_limit }
     • <b>Заканчивается через</b>: { $expiry_time }
     </blockquote>
+
+msg-menu-subscription =
+    <b>💳 Подписка:</b>
+    { $status ->
+    [ACTIVE]
+    { msg-subscription }
     [EXPIRED]
     <blockquote>
     • Срок действия истёк.
@@ -363,3 +366,28 @@ msg-subscription-confirm =
     <b>🛒 Подтверждение покупки</b>
 
     { msg-subscription-details }
+
+
+msg-subscription-success =
+    <b>✅ Оплата прошла успешно!</b>
+
+    { $purchase_type ->
+    [NEW] { msg-subscription-new-success }
+    [RENEW] { msg-subscription-renew-success }
+    *[CHANGE] { msg-subscription-change-success }
+    }
+
+msg-subscription-new-success = Чтобы начать пользоваться нашим сервисом, нажмите кнопку <code>`🔌 Подключиться`</code> и следуйте инструкциям!
+
+msg-subscription-renew-success = Ваша подписка продлена на { $added_duration }.
+
+msg-subscription-change-success = 
+    Ваша подписка была изменена.
+
+    <b>{ $plan_name }</b>
+    { msg-subscription }
+
+msg-subscription-failed = 
+    <b>❌ Произошла ошибка при обработке платежа!</b>
+
+    Не волнуйтесь, техподдержка уже уведомлена и свяжется с вами в ближайшее время. Приносим извинения за неудобства.

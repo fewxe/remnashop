@@ -9,12 +9,19 @@ class Notification(StatesGroup):
     CLOSE = State()
 
 
+class Connect(StatesGroup):
+    MAIN = State()
+
+
 class Subscription(StatesGroup):
     MAIN = State()
+    PROMOCODE = State()
     PLANS = State()
     DURATION = State()
     PAYMENT_METHOD = State()
     CONFIRM = State()
+    SUCCESS = State()
+    FAILED = State()
 
 
 class Dashboard(StatesGroup):

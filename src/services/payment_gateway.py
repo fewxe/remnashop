@@ -10,7 +10,6 @@ from pydantic import SecretStr
 from redis.asyncio import Redis
 
 from src.core.config import AppConfig
-from src.core.encryption import decrypt, encrypt
 from src.core.enums import (
     Currency,
     Locale,
@@ -19,7 +18,8 @@ from src.core.enums import (
     SystemNotificationType,
     TransactionStatus,
 )
-from src.core.storage_keys import DefaultCurrencyKey
+from src.core.security.crypto import decrypt, encrypt
+from src.core.storage.keys import DefaultCurrencyKey
 from src.core.utils.formatters import i18n_format_days, i18n_format_limit
 from src.infrastructure.database import UnitOfWork
 from src.infrastructure.database.models.dto import (
@@ -34,8 +34,7 @@ from src.infrastructure.database.models.dto import (
 from src.infrastructure.payment_gateways import BasePaymentGateway, PaymentGatewayFactory
 from src.infrastructure.redis import RedisRepository
 from src.infrastructure.taskiq.tasks.notifications import send_system_notification_task
-from src.infrastructure.taskiq.tasks.redirects import redirect_to_main_menu_task
-from src.infrastructure.taskiq.tasks.subscriptions import create_subscription_task
+from src.infrastructure.taskiq.tasks.subscriptions import purchase_subscription_task
 from src.services.subscription import SubscriptionService
 
 from .base import BaseService
@@ -165,11 +164,11 @@ class PaymentGatewayService(BaseService):
         transaction = await self.transaction_service.get(payment_id)
 
         if not transaction or not transaction.user:
-            logger.critical("")
+            logger.critical(f"Transaction or user not found for {payment_id}")
             return
 
         if transaction.is_completed:
-            logger.critical("")
+            logger.critical(f"Transaction {payment_id} already completed")
             return
 
         transaction.status = TransactionStatus.COMPLETED
@@ -186,8 +185,10 @@ class PaymentGatewayService(BaseService):
         }
         i18n_key = i18n_keys[transaction.purchase_type]
 
+        subscription = await self.subscription_service.get_current(transaction.user.telegram_id)
+        extra_i18n_kwargs = {}
+
         if transaction.purchase_type == PurchaseType.CHANGE:
-            subscription = await self.subscription_service.get_current(transaction.user.telegram_id)
             plan = subscription.plan if subscription else None
 
             extra_i18n_kwargs = {
@@ -204,8 +205,6 @@ class PaymentGatewayService(BaseService):
                 ),
                 "previous_plan_duration": (i18n_format_days(plan.duration) if plan else "N/A"),
             }
-        else:
-            extra_i18n_kwargs = {}
 
         i18n_kwargs = {
             "payment_id": transaction.payment_id,
@@ -229,9 +228,14 @@ class PaymentGatewayService(BaseService):
             i18n_key=i18n_key,
             i18n_kwargs={**i18n_kwargs, **extra_i18n_kwargs},
         )
-        await create_subscription_task.kiq(transaction.user, transaction.plan)
-        await redirect_to_main_menu_task.kiq(transaction.user)
-        # TODO: Redirect to succeeded payment window
+
+        await purchase_subscription_task.kiq(
+            transaction.user,
+            transaction.plan,
+            transaction.purchase_type,
+            subscription,
+        )
+
         logger.debug("Called tasks for payment")
 
     async def handle_payment_canceled(self, payment_id: UUID) -> None:
