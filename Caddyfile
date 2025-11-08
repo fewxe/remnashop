@@ -1,0 +1,4 @@
+366oks-171-22-31-75.ru.tuna.am:80 {
+    encode gzip
+    reverse_proxy remnawave:5000
+}
