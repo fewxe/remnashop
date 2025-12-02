@@ -5,8 +5,7 @@
     <u><b>РУССКИЙ</b></u>
 </p>
 
-
-![remnashop](https://github.com/user-attachments/assets/9c974da1-db66-4fc7-a1e5-0d4a77ad6d09)
+![remnashop](https://github.com/user-attachments/assets/57ba5832-4646-45e1-b082-f8f2f5e82c3e)
 
 **Этот проект представляет собой Telegram-бота для продажи VPN-подписок, интегрированного с Remnawave.**
 
@@ -226,7 +225,7 @@ sed -i "s|^DATABASE_PASSWORD=.*|DATABASE_PASSWORD=$(openssl rand -hex 24 | tr -d
 - **`REMNAWAVE_WEBHOOK_SECRET`** : Должен совпадать со значением `WEBHOOK_SECRET_HEADER` из `.env` панели.
 
 > [!WARNING]
-> Также в зависимости от вашей конфигурации обратите внимание на данные переменные: **`BOT_MINI_APP_URL`**, **`REMNAWAVE_CADDY_TOKEN`**, **`REMNAWAVE_COOKIE`**.
+> Также в зависимости от вашей конфигурации обратите внимание на данные переменные: **`BOT_MINI_APP`**, **`REMNAWAVE_CADDY_TOKEN`**, **`REMNAWAVE_COOKIE`**.
 
 > [!IMPORTANT]
 > Для корректной работы бота необходимо правильно настроить вебхук.  
@@ -255,7 +254,7 @@ docker compose up -d && docker compose logs -f -t
 Он необходим для получения вебхуков от Telegram, панели Remnawave и платежных систем.
 
 **В этом руководстве не описывается установка или настройка прокси.**  
-Вы можете использовать любой прокси-сервер по аналогии с [**Remnawave**](https://remna.st/docs/install/reverse-proxies/).
+Вы можете использовать любой прокси-сервер по аналогии с [**Remnawave**](https://docs.rw/docs/install/reverse-proxies/).
 
 > Если бот установлен на том же сервере, что и панель, прокси, вероятно, уже настроен.  
 > В этом случае нужно лишь добавить правило для перенаправления трафика в контейнер бота.

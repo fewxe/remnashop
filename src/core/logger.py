@@ -92,9 +92,8 @@ def setup_logger() -> None:
         "uvicorn.error",
         "uvicorn.access",
         "fastapi",
-        "httpx",
     ):
         logging.getLogger(logger_name).handlers = [intercept_handler]
-        logging.getLogger(logger_name).propagate = False
 
-    logging.getLogger("httpx._client").level = logging.WARNING
+    # logging.getLogger("httpx").propagate = False
+    logging.getLogger("httpx").level = logging.WARNING

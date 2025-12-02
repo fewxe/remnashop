@@ -4,7 +4,6 @@ from aiogram_dialog.widgets.kbd import Button, Column, Row, Select, Start, Switc
 from magic_filter import F
 
 from src.bot.keyboards import back_main_menu_button, main_menu_button
-from src.bot.routers.extra.test import show_dev_popup
 from src.bot.states import Dashboard, DashboardImporter
 from src.bot.widgets.banner import Banner
 from src.bot.widgets.i18n_format import I18nFormat
@@ -16,7 +15,6 @@ from .handlers import (
     on_database_input,
     on_import_active_xui,
     on_import_all_xui,
-    on_import_from_bot,
     on_squad_select,
     on_squads,
     on_sync,
@@ -31,18 +29,17 @@ importer = Window(
             id="xui",
             state=DashboardImporter.FROM_XUI,
         ),
-        Button(
-            text=I18nFormat("btn-importer-from-xui-shop"),
-            id="xui_shop",
-            on_click=on_import_from_bot,
-        ),
+        # Button(
+        #     text=I18nFormat("btn-importer-from-xui-shop"),
+        #     id="xui_shop",
+        #     on_click=on_import_from_bot,
+        # ),
     ),
     Row(
         Button(
             text=I18nFormat("btn-importer-sync"),
             id="sync",
-            # on_click=on_sync,
-            on_click=show_dev_popup,
+            on_click=on_sync,
         ),
     ),
     Row(

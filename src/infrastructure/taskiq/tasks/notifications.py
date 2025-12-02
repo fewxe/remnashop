@@ -18,6 +18,17 @@ from src.services.user import UserService
 
 @broker.task
 @inject
+async def send_user_notification_task(
+    user: UserDto,
+    ntf_type: UserNotificationType,
+    payload: MessagePayload,
+    notification_service: FromDishka[NotificationService],
+) -> None:
+    await notification_service.notify_user(user=user, payload=payload, ntf_type=ntf_type)
+
+
+@broker.task
+@inject
 async def send_system_notification_task(
     ntf_type: SystemNotificationType,
     payload: MessagePayload,
@@ -39,25 +50,16 @@ async def send_remnashop_notification_task(
 async def send_error_notification_task(
     error_id: Union[str, int],
     traceback_str: str,
-    i18n_kwargs: dict[str, Any],
+    payload: MessagePayload,
     notification_service: FromDishka[NotificationService],
-    i18n_key: str = "ntf-event-error",
 ) -> None:
     file_data = BufferedInputFile(
         file=traceback_str.encode(),
         filename=f"error_{error_id}.txt",
     )
-
-    await notification_service.notify_super_dev(
-        payload=MessagePayload(
-            i18n_key=i18n_key,
-            i18n_kwargs=i18n_kwargs,
-            media=file_data,
-            media_type=MediaType.DOCUMENT,
-            auto_delete_after=None,
-            add_close_button=True,
-        ),
-    )
+    payload.media = file_data
+    payload.media_type = MediaType.DOCUMENT
+    await notification_service.notify_super_dev(payload=payload)
 
 
 @broker.task
@@ -117,6 +119,9 @@ async def send_subscription_expire_notification_task(
     elif ntf_type == UserNotificationType.EXPIRED:
         i18n_key = "ntf-event-user-expired"
         i18n_kwargs_extra = {}
+    elif ntf_type == UserNotificationType.EXPIRED_1_DAY_AGO:
+        i18n_key = "ntf-event-user-expired_ago"
+        i18n_kwargs_extra = {"value": 1}
 
     user = await user_service.get(telegram_id)
 

@@ -1,8 +1,13 @@
 from aiogram import Router
 from aiogram.filters import ExceptionTypeFilter
-from aiogram_dialog.api.exceptions import UnknownIntent, UnknownState
+from aiogram_dialog.api.exceptions import (
+    InvalidStackIdError,
+    OutdatedIntent,
+    UnknownIntent,
+    UnknownState,
+)
 
-from src.bot.routers.extra.error import on_unknown_intent, on_unknown_state
+from src.bot.routers.extra.error import on_lost_context
 
 from . import dashboard, extra, menu, subscription
 from .dashboard import (
@@ -27,6 +32,7 @@ def setup_routers(router: Router) -> None:
         extra.payment.router,
         extra.notification.router,
         extra.test.router,
+        extra.commands.router,
         extra.member.router,
         extra.goto.router,
         #
@@ -43,6 +49,7 @@ def setup_routers(router: Router) -> None:
         #
         remnashop.dialog.router,
         remnashop.gateways.dialog.router,
+        remnashop.referral.dialog.router,
         remnashop.notifications.dialog.router,
         remnashop.plans.dialog.router,
         #
@@ -58,5 +65,7 @@ def setup_routers(router: Router) -> None:
 
 
 def setup_error_handlers(router: Router) -> None:
-    router.errors.register(on_unknown_intent, ExceptionTypeFilter(UnknownIntent))
-    router.errors.register(on_unknown_state, ExceptionTypeFilter(UnknownState))
+    router.errors.register(on_lost_context, ExceptionTypeFilter(UnknownIntent))
+    router.errors.register(on_lost_context, ExceptionTypeFilter(UnknownState))
+    router.errors.register(on_lost_context, ExceptionTypeFilter(OutdatedIntent))
+    router.errors.register(on_lost_context, ExceptionTypeFilter(InvalidStackIdError))

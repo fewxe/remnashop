@@ -61,6 +61,14 @@ async def on_gateway_test(
     if not gateway:
         raise ValueError(f"Attempted to test non-existent gateway '{gateway_id}'")
 
+    if gateway.settings and not gateway.settings.is_configure:
+        logger.warning(f"{log(user)} Gateway '{gateway_id}' is not configured")
+        await notification_service.notify_user(
+            user=user,
+            payload=MessagePayload(i18n_key="ntf-gateway-not-configured"),
+        )
+        return
+
     logger.info(f"{log(user)} Testing gateway '{gateway_id}'")
 
     try:
@@ -175,3 +183,21 @@ async def on_default_currency_select(
     user: UserDto = dialog_manager.middleware_data[USER_KEY]
     logger.info(f"{log(user)} Set default currency '{selected_currency}'")
     await settings_service.set_default_currency(selected_currency)
+
+
+@inject
+async def on_gateway_move(
+    callback: CallbackQuery,
+    widget: Button,
+    sub_manager: SubManager,
+    payment_gateway_service: FromDishka[PaymentGatewayService],
+) -> None:
+    await sub_manager.load_data()
+    user: UserDto = sub_manager.middleware_data[USER_KEY]
+    gateway_id = int(sub_manager.item_id)
+
+    moved = await payment_gateway_service.move_gateway_up(gateway_id)
+    if moved:
+        logger.info(f"{log(user)} Moved plan '{gateway_id}' up successfully")
+    else:
+        logger.warning(f"{log(user)} Failed to move plan '{gateway_id}' up")

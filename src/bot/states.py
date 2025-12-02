@@ -7,7 +7,7 @@ class MainMenu(StatesGroup):
     MAIN = State()
     DEVICES = State()
     INVITE = State()
-    INVITED_USERS = State()
+    INVITE_ABOUT = State()
 
 
 class Notification(StatesGroup):
@@ -79,21 +79,34 @@ class DashboardUser(StatesGroup):
     DEVICE_LIMIT = State()
     EXPIRE_TIME = State()
     SQUADS = State()
+    INTERNAL_SQUADS = State()
+    EXTERNAL_SQUADS = State()
     DEVICES_LIST = State()
     DISCOUNT = State()
+    POINTS = State()
     STATISTICS = State()
     ROLE = State()
     TRANSACTIONS_LIST = State()
     TRANSACTION = State()
     GIVE_ACCESS = State()
     MESSAGE = State()
+    GIVE_SUBSCRIPTION = State()
+    SUBSCRIPTION_DURATION = State()
 
 
 class DashboardRemnashop(StatesGroup):
     MAIN = State()
     ADMINS = State()
-    REFERRAL = State()
     ADVERTISING = State()
+
+
+class RemnashopReferral(StatesGroup):
+    MAIN = State()
+    LEVEL = State()
+    REWARD = State()
+    REWARD_TYPE = State()
+    ACCRUAL_STRATEGY = State()
+    REWARD_STRATEGY = State()
 
 
 class RemnashopGateways(StatesGroup):
@@ -101,6 +114,7 @@ class RemnashopGateways(StatesGroup):
     SETTINGS = State()
     FIELD = State()
     CURRENCY = State()
+    PLACEMENT = State()
 
 
 class RemnashopNotifications(StatesGroup):
@@ -113,6 +127,8 @@ class RemnashopPlans(StatesGroup):
     MAIN = State()
     CONFIGURATOR = State()
     NAME = State()
+    DESCRIPTION = State()
+    TAG = State()
     TYPE = State()
     AVAILABILITY = State()
     TRAFFIC = State()
@@ -123,6 +139,8 @@ class RemnashopPlans(StatesGroup):
     PRICE = State()
     ALLOWED = State()
     SQUADS = State()
+    INTERNAL_SQUADS = State()
+    EXTERNAL_SQUADS = State()
 
 
 class DashboardRemnawave(StatesGroup):

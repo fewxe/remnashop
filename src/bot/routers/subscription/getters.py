@@ -19,7 +19,6 @@ from src.services.payment_gateway import PaymentGatewayService
 from src.services.plan import PlanService
 from src.services.pricing import PricingService
 from src.services.settings import SettingsService
-from src.services.subscription import SubscriptionService
 
 
 @inject
@@ -40,12 +39,10 @@ async def subscription_getter(
 async def plans_getter(
     dialog_manager: DialogManager,
     user: UserDto,
-    subscription_service: FromDishka[SubscriptionService],
     plan_service: FromDishka[PlanService],
     **kwargs: Any,
 ) -> dict[str, Any]:
-    is_new_user = await subscription_service.has_any_subscription(user)
-    plans = await plan_service.get_available_plans(user, is_new_user)
+    plans = await plan_service.get_available_plans(user)
 
     formatted_plans = [
         {
@@ -77,6 +74,7 @@ async def duration_getter(
 
     currency = await settings_service.get_default_currency()
     only_single_plan = dialog_manager.dialog_data.get("only_single_plan", False)
+    dialog_manager.dialog_data["is_free"] = False
     durations = []
 
     for duration in plan.durations:
@@ -95,6 +93,7 @@ async def duration_getter(
 
     return {
         "plan": plan.name,
+        "description": plan.description or False,
         "type": plan.type,
         "devices": i18n_format_device_limit(plan.device_limit),
         "traffic": i18n_format_traffic_limit(plan.traffic_limit),
@@ -141,6 +140,7 @@ async def payment_method_getter(
 
     return {
         "plan": plan.name,
+        "description": plan.description or False,
         "type": plan.type,
         "devices": i18n_format_device_limit(plan.device_limit),
         "traffic": i18n_format_traffic_limit(plan.traffic_limit),
@@ -167,7 +167,9 @@ async def confirm_getter(
 
     selected_duration = dialog_manager.dialog_data["selected_duration"]
     only_single_duration = dialog_manager.dialog_data.get("only_single_duration", False)
+    is_free = dialog_manager.dialog_data.get("is_free", False)
     selected_payment_method = dialog_manager.dialog_data["selected_payment_method"]
+    purchase_type = dialog_manager.dialog_data["purchase_type"]
     payment_gateway = await payment_gateway_service.get_by_type(selected_payment_method)
     duration = plan.get_duration(selected_duration)
 
@@ -185,7 +187,9 @@ async def confirm_getter(
     gateways = await payment_gateway_service.filter_active()
 
     return {
+        "purchase_type": purchase_type,
         "plan": plan.name,
+        "description": plan.description or False,
         "type": plan.type,
         "devices": i18n_format_device_limit(plan.device_limit),
         "traffic": i18n_format_traffic_limit(plan.traffic_limit),
@@ -198,6 +202,7 @@ async def confirm_getter(
         "url": result_url,
         "only_single_gateway": len(gateways) == 1,
         "only_single_duration": only_single_duration,
+        "is_free": is_free,
     }
 
 
@@ -206,18 +211,15 @@ async def getter_connect(
     dialog_manager: DialogManager,
     config: AppConfig,
     user: UserDto,
-    subscription_service: FromDishka[SubscriptionService],
     **kwargs: Any,
 ) -> dict[str, Any]:
-    subscription = await subscription_service.get_current(user.telegram_id)
-
-    if not subscription:
+    if not user.current_subscription:
         raise ValueError(f"User '{user.telegram_id}' has no active subscription after purchase")
 
     return {
-        "miniapp_url": config.bot.mini_app_url.get_secret_value(),
-        "subscription_url": subscription.url,
-        "connetable": True,
+        "is_app": config.bot.is_mini_app,
+        "url": config.bot.mini_app_url or user.current_subscription.url,
+        "connectable": True,
     }
 
 
@@ -226,12 +228,11 @@ async def success_payment_getter(
     dialog_manager: DialogManager,
     config: AppConfig,
     user: UserDto,
-    subscription_service: FromDishka[SubscriptionService],
     **kwargs: Any,
 ) -> dict[str, Any]:
     start_data = cast(dict[str, Any], dialog_manager.start_data)
     purchase_type: PurchaseType = start_data["purchase_type"]
-    subscription = await subscription_service.get_current(user.telegram_id)
+    subscription = user.current_subscription
 
     if not subscription:
         raise ValueError(f"User '{user.telegram_id}' has no active subscription after purchase")
@@ -243,7 +244,7 @@ async def success_payment_getter(
         "device_limit": i18n_format_device_limit(subscription.device_limit),
         "expire_time": i18n_format_expire_time(subscription.expire_at),
         "added_duration": i18n_format_days(subscription.plan.duration),
-        "miniapp_url": config.bot.mini_app_url.get_secret_value(),
-        "subscription_url": subscription.url,
-        "connetable": True,
+        "is_app": config.bot.is_mini_app,
+        "url": config.bot.mini_app_url or subscription.url,
+        "connectable": True,
     }

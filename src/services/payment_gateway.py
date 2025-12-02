@@ -46,18 +46,19 @@ from src.infrastructure.taskiq.tasks.notifications import (
     send_test_transaction_notification_task,
 )
 from src.infrastructure.taskiq.tasks.subscriptions import purchase_subscription_task
+from src.services.referral import ReferralService
 from src.services.subscription import SubscriptionService
 
 from .base import BaseService
 from .transaction import TransactionService
 
 
-# TODO: Make payment gateway sorting customizable for display
 class PaymentGatewayService(BaseService):
     uow: UnitOfWork
     transaction_service: TransactionService
     subscription_service: SubscriptionService
     payment_gateway_factory: PaymentGatewayFactory
+    referral_service: ReferralService
 
     def __init__(
         self,
@@ -71,12 +72,14 @@ class PaymentGatewayService(BaseService):
         transaction_service: TransactionService,
         subscription_service: SubscriptionService,
         payment_gateway_factory: PaymentGatewayFactory,
+        referral_service: ReferralService,
     ) -> None:
         super().__init__(config, bot, redis_client, redis_repository, translator_hub)
         self.uow = uow
         self.transaction_service = transaction_service
         self.subscription_service = subscription_service
         self.payment_gateway_factory = payment_gateway_factory
+        self.referral_service = referral_service
 
     async def create_default(self) -> None:
         for gateway_type in PaymentGatewayType:
@@ -109,7 +112,7 @@ class PaymentGatewayService(BaseService):
                 #     settings = RobokassaGatewaySettingsDto()
                 case _:
                     logger.warning(f"Unhandled payment gateway type '{gateway_type}' — skipping")
-                    return
+                    continue
 
             order_index = await self.uow.repository.gateways.get_max_index()
             order_index = (order_index or 0) + 1
@@ -147,8 +150,8 @@ class PaymentGatewayService(BaseService):
         logger.debug(f"Retrieved payment gateway of type '{gateway_type}'")
         return PaymentGatewayDto.from_model(db_gateway, decrypt=True)
 
-    async def get_all(self) -> list[PaymentGatewayDto]:
-        db_gateways = await self.uow.repository.gateways.get_all()
+    async def get_all(self, sorted: bool = False) -> list[PaymentGatewayDto]:
+        db_gateways = await self.uow.repository.gateways.get_all(sorted)
         logger.debug(f"Retrieved '{len(db_gateways)}' payment gateways")
         return PaymentGatewayDto.from_model_list(db_gateways, decrypt=False)
 
@@ -177,6 +180,29 @@ class PaymentGatewayService(BaseService):
         db_gateways = await self.uow.repository.gateways.filter_active(is_active)
         logger.debug(f"Filtered active gateways: '{is_active}', found '{len(db_gateways)}'")
         return PaymentGatewayDto.from_model_list(db_gateways, decrypt=False)
+
+    async def move_gateway_up(self, gateway_id: int) -> bool:
+        db_gateways = await self.uow.repository.gateways.get_all()
+        db_gateways.sort(key=lambda p: p.order_index)
+
+        index = next((i for i, p in enumerate(db_gateways) if p.id == gateway_id), None)
+        if index is None:
+            logger.warning(f"Payment gateway with ID '{gateway_id}' not found for move operation")
+            return False
+
+        if index == 0:
+            gateway = db_gateways.pop(0)
+            db_gateways.append(gateway)
+            logger.debug(f"Payment gateway '{gateway_id}' moved from top to bottom")
+        else:
+            db_gateways[index - 1], db_gateways[index] = db_gateways[index], db_gateways[index - 1]
+            logger.debug(f"Payment gateway '{gateway_id}' moved up one position")
+
+        for i, gateway in enumerate(db_gateways, start=1):
+            gateway.order_index = i
+
+        logger.info(f"Payment gateway '{gateway_id}' reorder successfully")
+        return True
 
     #
 
@@ -287,8 +313,6 @@ class PaymentGatewayService(BaseService):
             await send_test_transaction_notification_task.kiq(user=transaction.user)
             return
 
-        # TODO: Add referral logic
-
         i18n_keys = {
             PurchaseType.NEW: "ntf-event-subscription-new",
             PurchaseType.RENEW: "ntf-event-subscription-renew",
@@ -344,6 +368,10 @@ class PaymentGatewayService(BaseService):
         )
 
         await purchase_subscription_task.kiq(transaction, subscription)
+
+        if not transaction.pricing.is_free:
+            await self.referral_service.assign_referral_rewards(transaction=transaction)
+
         logger.debug(f"Called tasks payment for user '{transaction.user.telegram_id}'")
 
     async def handle_payment_canceled(self, payment_id: UUID) -> None:

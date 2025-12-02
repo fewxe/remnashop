@@ -5,8 +5,7 @@
     <a href="https://github.com/snoups/remnashop/blob/main/README.ru_RU.md"><b>РУССКИЙ</b></a>
 </p>
 
-
-![remnashop](https://github.com/user-attachments/assets/9c974da1-db66-4fc7-a1e5-0d4a77ad6d09)
+![remnashop](https://github.com/user-attachments/assets/57ba5832-4646-45e1-b082-f8f2f5e82c3e)
 
 **This project is a Telegram bot for selling VPN subscriptions, integrated with Remnawave.**
 
@@ -226,7 +225,7 @@ Now, open the .env file and update the variables:
 - **`REMNAWAVE_WEBHOOK_SECRET`** : Must match the value of `WEBHOOK_SECRET_HEADER` from `.env` the panel.
 
 > [!WARNING]
-> Depending on your configuration, also pay attention to the following variables: **`BOT_MINI_APP_URL`**, **`REMNAWAVE_CADDY_TOKEN`**, **`REMNAWAVE_COOKIE`**.
+> Depending on your configuration, also pay attention to the following variables: **`BOT_MINI_APP`**, **`REMNAWAVE_CADDY_TOKEN`**, **`REMNAWAVE_COOKIE`**.
 
 > [!IMPORTANT]
 > The bot requires a properly configured webhook to function.  
@@ -257,7 +256,7 @@ A reverse proxy is required to run Remnashop properly.
 It is needed to receive webhooks from Telegram, the Remnawave panel, and payment systems.
 
 **This guide does not cover how to install or configure a reverse proxy.**  
-You can use any proxy solution, similar to how it is done for [**Remnawave**](https://remna.st/docs/install/reverse-proxies/).
+You can use any proxy solution, similar to how it is done for [**Remnawave**](https://docs.rw/docs/install/reverse-proxies/).
 
 > If you are installing the bot on the same server as the panel, you probably already have a proxy configured.  
 > In this case, you only need to add a forwarding rule to route traffic to the bot container.

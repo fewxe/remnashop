@@ -21,7 +21,6 @@ from src.core.utils.formatters import (
 from src.core.utils.message_payload import MessagePayload
 from src.infrastructure.database.models.dto import (
     PlanSnapshotDto,
-    RemnaSubscriptionDto,
     SubscriptionDto,
     TransactionDto,
     UserDto,
@@ -62,6 +61,7 @@ async def trial_subscription_task(
             traffic_limit=plan.traffic_limit,
             device_limit=plan.device_limit,
             internal_squads=plan.internal_squads,
+            external_squad=plan.external_squad,
             expire_at=created_user.expire_at,
             url=created_user.subscription_url,
             plan=plan,
@@ -100,13 +100,17 @@ async def trial_subscription_task(
         await send_error_notification_task.kiq(
             error_id=user.telegram_id,
             traceback_str=traceback_str,
-            i18n_kwargs={
-                "user": True,
-                "user_id": str(user.telegram_id),
-                "user_name": user.name,
-                "username": user.username or False,
-                "error": f"{error_type_name}: {error_message.as_html()}",
-            },
+            payload=MessagePayload.not_deleted(
+                i18n_key="ntf-event-error",
+                i18n_kwargs={
+                    "user": True,
+                    "user_id": str(user.telegram_id),
+                    "user_name": user.name,
+                    "username": user.username or False,
+                    "error": f"{error_type_name}: {error_message.as_html()}",
+                },
+                reply_markup=get_user_keyboard(user.telegram_id),
+            ),
         )
 
         await redirect_to_failed_subscription_task.kiq(user)
@@ -141,6 +145,7 @@ async def purchase_subscription_task(
                 traffic_limit=plan.traffic_limit,
                 device_limit=plan.device_limit,
                 internal_squads=plan.internal_squads,
+                external_squad=plan.external_squad,
                 expire_at=created_user.expire_at,
                 url=created_user.subscription_url,
                 plan=plan,
@@ -182,6 +187,7 @@ async def purchase_subscription_task(
                 traffic_limit=plan.traffic_limit,
                 device_limit=plan.device_limit,
                 internal_squads=plan.internal_squads,
+                external_squad=plan.external_squad,
                 expire_at=updated_user.expire_at,
                 url=updated_user.subscription_url,
                 plan=plan,
@@ -212,13 +218,17 @@ async def purchase_subscription_task(
         await send_error_notification_task.kiq(
             error_id=user.telegram_id,
             traceback_str=traceback_str,
-            i18n_kwargs={
-                "user": True,
-                "user_id": str(user.telegram_id),
-                "user_name": user.name,
-                "username": user.username or False,
-                "error": f"{error_type_name}: {error_message.as_html()}",
-            },
+            payload=MessagePayload.not_deleted(
+                i18n_key="ntf-event-error",
+                i18n_kwargs={
+                    "user": True,
+                    "user_id": str(user.telegram_id),
+                    "user_name": user.name,
+                    "username": user.username or False,
+                    "error": f"{error_type_name}: {error_message.as_html()}",
+                },
+                reply_markup=get_user_keyboard(user.telegram_id),
+            ),
         )
 
         await redirect_to_failed_subscription_task.kiq(user)
@@ -276,32 +286,3 @@ async def update_status_current_subscription_task(
 
     subscription.status = status
     await subscription_service.update(subscription)
-
-
-@broker.task
-@inject
-async def sync_current_subscription_task(
-    telegram_id: int,
-    remna_subscription: RemnaSubscriptionDto,
-    user_service: FromDishka[UserService],
-    subscription_service: FromDishka[SubscriptionService],
-) -> None:
-    logger.info(f"Starting subscription sync for user '{telegram_id}'")
-
-    user = await user_service.get(telegram_id)
-
-    if not user:
-        logger.debug(f"User '{telegram_id}' not found, skipping")
-        return
-
-    subscription = await subscription_service.get_current(user.telegram_id)
-
-    if not subscription:
-        logger.debug(f"No active subscription for user '{user.telegram_id}'")
-        return
-
-    logger.success(remna_subscription)
-    subscription = subscription.apply_sync(remna_subscription)
-    logger.success(subscription)
-    await subscription_service.update(subscription)
-    logger.info(f"Subscription for '{telegram_id}' successfully synchronized")
