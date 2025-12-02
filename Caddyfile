@@ -1,4 +1,10 @@
-366oks-171-22-31-75.ru.tuna.am:80 {
+:80 {
+    log {
+        output stdout
+        format console
+        level INFO
+    }
+    
     encode gzip
-    reverse_proxy remnawave:5000
+    reverse_proxy remnashop:5000
 }

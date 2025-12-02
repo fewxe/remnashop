@@ -75,8 +75,22 @@ services:
 
     networks:
       - remnawave-network
-    
 
+  caddy:
+    image: caddy:2-alpine
+    container_name: "remnashop-caddy"
+    hostname: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    networks:
+      - remnawave-network
+    depends_on:
+      - remnashop
+    
   remnashop-taskiq-worker:
     <<: *remnashop
     container_name: "remnashop-taskiq-worker"

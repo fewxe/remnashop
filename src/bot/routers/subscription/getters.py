@@ -11,6 +11,7 @@ from src.core.utils.adapter import DialogDataAdapter
 from src.core.utils.formatters import (
     i18n_format_days,
     i18n_format_device_limit,
+    format_username_to_url,
     i18n_format_expire_time,
     i18n_format_traffic_limit,
 )
@@ -21,6 +22,8 @@ from src.services.pricing import PricingService
 from src.services.settings import SettingsService
 
 
+
+
 @inject
 async def subscription_getter(
     dialog_manager: DialogManager,
@@ -29,10 +32,38 @@ async def subscription_getter(
 ) -> dict[str, Any]:
     has_active = bool(user.current_subscription and not user.current_subscription.is_trial)
     is_unlimited = user.current_subscription.is_unlimited if user.current_subscription else False
-    return {
+    
+    # Базовые данные
+    base_data = {
         "has_active_subscription": has_active,
         "is_not_unlimited": not is_unlimited,
+        "has_subscription": user.has_subscription,
     }
+    
+    subscription = user.current_subscription
+    
+    # Если нет подписки
+    if not subscription:
+        base_data.update({
+            "status": "NONE",
+            "is_trial": False,
+            "connetable": False,
+        })
+        return base_data
+    
+    # Если есть подписка - добавляем детальную информацию
+    base_data.update({
+        "status": subscription.status,  # ACTIVE, EXPIRED, LIMITED, DISABLED
+        "type": subscription.get_subscription_type,
+        "traffic_limit": i18n_format_traffic_limit(subscription.traffic_limit),
+        "device_limit": i18n_format_device_limit(subscription.device_limit),
+        "expire_time": i18n_format_expire_time(subscription.expire_at),
+        "is_trial": subscription.is_trial,
+        "connetable": subscription.is_active,
+        "subscription_url": subscription.url,
+    })
+    
+    return base_data
 
 
 @inject
