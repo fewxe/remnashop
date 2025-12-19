@@ -51,7 +51,7 @@ class YoomoneyGateway(BasePaymentGateway):
                 follow_redirects=True,
             )
             response.raise_for_status()
-            return PaymentResult(id=payment_id, url=response.url)
+            return PaymentResult(id=payment_id, url=str(response.url))
 
         except HTTPStatusError as exception:
             logger.error(
