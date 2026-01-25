@@ -25,9 +25,9 @@ cmd-help = Помощь
 
 referral-invite-message =
     { space }
-    🚀 Привет! Хочешь стабильный и быстрый VPN?  
+    Привет! Хочешь стабильный и быстрый VPN?  
     
-    ↘️ ЖМИ СЮДА И ПОПРОБУЙ БЕСПЛАТНО!
+    👇 ЖМИ СКОРЕЙ И ПОПРОБУЙ OPOSSUMVPN БЕСПЛАТНО!
     { $url }
 
 
@@ -56,6 +56,14 @@ frg-user =
     *[HAS] • <b>Ваша скидка</b>: { $personal_discount }%
     }
     </blockquote>
+
+frg-personal-discount = { $personal_discount ->
+    [0] { empty }
+    *[HAS] 
+    <blockquote>
+    Ваша скидка: { $personal_discount }%
+    </blockquote>
+    }
 
 frg-user-info =
     <blockquote>

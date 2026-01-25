@@ -1,0 +1,10 @@
+:80 {
+    log {
+        output stdout
+        format console
+        level INFO
+    }
+    
+    encode gzip
+    reverse_proxy remnashop:5000
+}
