@@ -28,7 +28,7 @@ btn-squad-choice = { $selected ->
 
 
 # Menu
-btn-menu-connect = 🚀 Подключиться
+btn-menu-connect = ⚡️ Подключиться
 
 btn-menu-connect-not-available =
     ⚠️ { $status -> 
@@ -40,14 +40,14 @@ btn-menu-connect-not-available =
 btn-menu-trial = 🎁 ПОПРОБОВАТЬ БЕСПЛАТНО
 btn-menu-devices = 📱 Мои устройства
 btn-menu-devices-empty = ⚠️ Нет привязанных устройств
-btn-menu-subscription = 💳 Подписка
-btn-menu-invite = 👥 Пригласить
+btn-menu-subscription = ⭐️ Премиум подписка
+btn-menu-invite = 🗣️ Пригласить
 btn-menu-invite-about = ❓ Подробнее о награде
 btn-menu-invite-copy = 🔗 Скопировать ссылку
 btn-menu-invite-send = 📩 Пригласить
 btn-menu-invite-qr = 🧾 QR-код
 btn-menu-invite-withdraw-points = 💎 Обменять баллы
-btn-menu-support = 🆘 Поддержка
+btn-menu-support = 👥 Поддержка
 btn-menu-dashboard = 🛠 Панель управления
 
 
