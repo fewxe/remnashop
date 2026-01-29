@@ -35,7 +35,7 @@ async def menu_getter(
 ) -> dict[str, Any]:
     try:
         plan = await plan_service.get_trial_plan()
-        has_used_trial = await subscription_service.has_used_trial(user)
+        has_used_trial = await subscription_service.has_used_trial(user.telegram_id)
         support_username = config.bot.support_username.get_secret_value()
         ref_link = await referral_service.get_ref_link(user.referral_code)
         support_link = format_username_to_url(support_username, i18n.get("contact-support-help"))
@@ -73,7 +73,7 @@ async def menu_getter(
                 "device_limit": i18n_format_device_limit(subscription.device_limit),
                 "expire_time": i18n_format_expire_time(subscription.expire_at),
                 "is_trial": subscription.is_trial,
-                "traffic_strategy": subscription.plan.traffic_limit_strategy,
+                "traffic_strategy": subscription.traffic_limit_strategy,
                 "reset_time": subscription.get_expire_time,
                 "has_device_limit": subscription.has_devices_limit
                 if subscription.is_active
@@ -102,6 +102,7 @@ async def devices_getter(
 
     formatted_devices = [
         {
+            "short_hwid": device.hwid[:32],
             "hwid": device.hwid,
             "platform": device.platform,
             "device_model": device.device_model,
@@ -109,6 +110,8 @@ async def devices_getter(
         }
         for device in devices
     ]
+
+    dialog_manager.dialog_data["hwid_map"] = formatted_devices
 
     return {
         "current_count": len(devices),

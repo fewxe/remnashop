@@ -180,6 +180,7 @@ subscription = Window(
             id="device",
             state=DashboardUser.DEVICE_LIMIT,
         ),
+        when=F["can_edit"],
     ),
     Row(
         Button(
@@ -203,6 +204,7 @@ subscription = Window(
             text=I18nFormat("btn-user-subscription-squads"),
             id="squads",
             state=DashboardUser.SQUADS,
+            when=F["can_edit"],
         ),
     ),
     Row(
@@ -422,7 +424,7 @@ devices_list = Window(
             ),
         ),
         id="devices_list",
-        item_id_getter=lambda item: item["hwid"],
+        item_id_getter=lambda item: item["short_hwid"],
         items="devices",
     ),
     Row(

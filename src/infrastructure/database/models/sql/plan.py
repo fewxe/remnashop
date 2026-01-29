@@ -2,7 +2,7 @@ from decimal import Decimal
 from typing import Optional
 from uuid import UUID
 
-from remnawave.enums.users import TrafficLimitStrategy
+from remnapy.enums.users import TrafficLimitStrategy
 from sqlalchemy import ARRAY, BigInteger, Boolean, Enum, ForeignKey, Integer, Numeric, String
 from sqlalchemy import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -56,7 +56,7 @@ class Plan(BaseSql, TimestampMixin):
     )
     allowed_user_ids: Mapped[list[int]] = mapped_column(ARRAY(BigInteger), nullable=True)
     internal_squads: Mapped[list[UUID]] = mapped_column(ARRAY(PG_UUID), nullable=False)
-    external_squad: Mapped[Optional[UUID]] = mapped_column(ARRAY(PG_UUID), nullable=True)
+    external_squad: Mapped[Optional[UUID]] = mapped_column(PG_UUID, nullable=True)
 
     durations: Mapped[list["PlanDuration"]] = relationship(
         "PlanDuration",

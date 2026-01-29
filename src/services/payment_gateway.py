@@ -41,11 +41,8 @@ from src.infrastructure.database.models.dto import (
 from src.infrastructure.database.models.sql import PaymentGateway
 from src.infrastructure.payment_gateways import BasePaymentGateway, PaymentGatewayFactory
 from src.infrastructure.redis import RedisRepository
-from src.infrastructure.taskiq.tasks.notifications import (
-    send_system_notification_task,
-    send_test_transaction_notification_task,
-)
 from src.infrastructure.taskiq.tasks.subscriptions import purchase_subscription_task
+from src.services.notification import NotificationService
 from src.services.referral import ReferralService
 from src.services.subscription import SubscriptionService
 
@@ -73,6 +70,7 @@ class PaymentGatewayService(BaseService):
         subscription_service: SubscriptionService,
         payment_gateway_factory: PaymentGatewayFactory,
         referral_service: ReferralService,
+        notification_service: NotificationService,
     ) -> None:
         super().__init__(config, bot, redis_client, redis_repository, translator_hub)
         self.uow = uow
@@ -80,6 +78,7 @@ class PaymentGatewayService(BaseService):
         self.subscription_service = subscription_service
         self.payment_gateway_factory = payment_gateway_factory
         self.referral_service = referral_service
+        self.notification_service = notification_service
 
     async def create_default(self) -> None:
         for gateway_type in PaymentGatewayType:
@@ -95,15 +94,15 @@ class PaymentGatewayService(BaseService):
                 case PaymentGatewayType.YOOKASSA:
                     is_active = False
                     settings = YookassaGatewaySettingsDto()
-                # case PaymentGatewayType.YOOMONEY:
-                #     is_active = False
-                #     settings = YoomoneyGatewaySettingsDto()
-                # case PaymentGatewayType.CRYPTOMUS:
-                #     is_active = False
-                #     settings = CryptomusGatewaySettingsDto()
-                # case PaymentGatewayType.HELEKET:
-                #     is_active = False
-                #     settings = HeleketGatewaySettingsDto()
+                case PaymentGatewayType.YOOMONEY:
+                    is_active = False
+                    settings = YoomoneyGatewaySettingsDto()
+                case PaymentGatewayType.CRYPTOMUS:
+                    is_active = False
+                    settings = CryptomusGatewaySettingsDto()
+                case PaymentGatewayType.HELEKET:
+                    is_active = False
+                    settings = HeleketGatewaySettingsDto()
                 # case PaymentGatewayType.CRYPTOPAY:
                 #     is_active = False
                 #     settings = CryptopayGatewaySettingsDto()
@@ -114,24 +113,27 @@ class PaymentGatewayService(BaseService):
                     logger.warning(f"Unhandled payment gateway type '{gateway_type}' - skipping")
                     continue
 
-            order_index = await self.uow.repository.gateways.get_max_index()
-            order_index = (order_index or 0) + 1
+            async with self.uow:
+                order_index = await self.uow.repository.gateways.get_max_index()
 
-            payment_gateway = PaymentGatewayDto(
-                order_index=order_index,
-                type=gateway_type,
-                currency=Currency.from_gateway_type(gateway_type),
-                is_active=is_active,
-                settings=settings,
-            )
+                order_index = (order_index or 0) + 1
 
-            db_payment_gateway = PaymentGateway(**payment_gateway.model_dump())
-            db_payment_gateway = await self.uow.repository.gateways.create(db_payment_gateway)
+                payment_gateway = PaymentGatewayDto(
+                    order_index=order_index,
+                    type=gateway_type,
+                    currency=Currency.from_gateway_type(gateway_type),
+                    is_active=is_active,
+                    settings=settings,
+                )
+
+                db_payment_gateway = PaymentGateway(**payment_gateway.model_dump())
+                db_payment_gateway = await self.uow.repository.gateways.create(db_payment_gateway)
 
             logger.info(f"Payment gateway '{gateway_type}' created")
 
     async def get(self, gateway_id: int) -> Optional[PaymentGatewayDto]:
-        db_gateway = await self.uow.repository.gateways.get(gateway_id)
+        async with self.uow:
+            db_gateway = await self.uow.repository.gateways.get(gateway_id)
 
         if not db_gateway:
             logger.warning(f"Payment gateway '{gateway_id}' not found")
@@ -141,7 +143,8 @@ class PaymentGatewayService(BaseService):
         return PaymentGatewayDto.from_model(db_gateway, decrypt=True)
 
     async def get_by_type(self, gateway_type: PaymentGatewayType) -> Optional[PaymentGatewayDto]:
-        db_gateway = await self.uow.repository.gateways.get_by_type(gateway_type)
+        async with self.uow:
+            db_gateway = await self.uow.repository.gateways.get_by_type(gateway_type)
 
         if not db_gateway:
             logger.warning(f"Payment gateway of type '{gateway_type}' not found")
@@ -151,7 +154,9 @@ class PaymentGatewayService(BaseService):
         return PaymentGatewayDto.from_model(db_gateway, decrypt=True)
 
     async def get_all(self, sorted: bool = False) -> list[PaymentGatewayDto]:
-        db_gateways = await self.uow.repository.gateways.get_all(sorted)
+        async with self.uow:
+            db_gateways = await self.uow.repository.gateways.get_all(sorted)
+
         logger.debug(f"Retrieved '{len(db_gateways)}' payment gateways")
         return PaymentGatewayDto.from_model_list(db_gateways, decrypt=False)
 
@@ -161,10 +166,11 @@ class PaymentGatewayService(BaseService):
         if gateway.settings and gateway.settings.changed_data:
             updated_data["settings"] = gateway.settings.prepare_init_data(encrypt=True)
 
-        db_updated_gateway = await self.uow.repository.gateways.update(
-            gateway_id=gateway.id,  # type: ignore[arg-type]
-            **updated_data,
-        )
+        async with self.uow:
+            db_updated_gateway = await self.uow.repository.gateways.update(
+                gateway_id=gateway.id,  # type: ignore[arg-type]
+                **updated_data,
+            )
 
         if db_updated_gateway:
             logger.info(f"Payment gateway '{gateway.type}' updated successfully")
@@ -177,29 +183,37 @@ class PaymentGatewayService(BaseService):
         return PaymentGatewayDto.from_model(db_updated_gateway, decrypt=True)
 
     async def filter_active(self, is_active: bool = True) -> list[PaymentGatewayDto]:
-        db_gateways = await self.uow.repository.gateways.filter_active(is_active)
+        async with self.uow:
+            db_gateways = await self.uow.repository.gateways.filter_active(is_active)
+
         logger.debug(f"Filtered active gateways: '{is_active}', found '{len(db_gateways)}'")
         return PaymentGatewayDto.from_model_list(db_gateways, decrypt=False)
 
     async def move_gateway_up(self, gateway_id: int) -> bool:
-        db_gateways = await self.uow.repository.gateways.get_all()
-        db_gateways.sort(key=lambda p: p.order_index)
+        async with self.uow:
+            db_gateways = await self.uow.repository.gateways.get_all()
+            db_gateways.sort(key=lambda p: p.order_index)
 
-        index = next((i for i, p in enumerate(db_gateways) if p.id == gateway_id), None)
-        if index is None:
-            logger.warning(f"Payment gateway with ID '{gateway_id}' not found for move operation")
-            return False
+            index = next((i for i, p in enumerate(db_gateways) if p.id == gateway_id), None)
+            if index is None:
+                logger.warning(
+                    f"Payment gateway with ID '{gateway_id}' not found for move operation"
+                )
+                return False
 
-        if index == 0:
-            gateway = db_gateways.pop(0)
-            db_gateways.append(gateway)
-            logger.debug(f"Payment gateway '{gateway_id}' moved from top to bottom")
-        else:
-            db_gateways[index - 1], db_gateways[index] = db_gateways[index], db_gateways[index - 1]
-            logger.debug(f"Payment gateway '{gateway_id}' moved up one position")
+            if index == 0:
+                gateway = db_gateways.pop(0)
+                db_gateways.append(gateway)
+                logger.debug(f"Payment gateway '{gateway_id}' moved from top to bottom")
+            else:
+                db_gateways[index - 1], db_gateways[index] = (
+                    db_gateways[index],
+                    db_gateways[index - 1],
+                )
+                logger.debug(f"Payment gateway '{gateway_id}' moved up one position")
 
-        for i, gateway in enumerate(db_gateways, start=1):
-            gateway.order_index = i
+            for i, gateway in enumerate(db_gateways, start=1):
+                gateway.order_index = i
 
         logger.info(f"Payment gateway '{gateway_id}' reorder successfully")
         return True
@@ -228,9 +242,9 @@ class PaymentGatewayService(BaseService):
         transaction_data = {
             "status": TransactionStatus.PENDING,
             "purchase_type": purchase_type,
-            "gateway_type": gateway_instance.gateway.type,
+            "gateway_type": gateway_instance.data.type,
             "pricing": pricing,
-            "currency": gateway_instance.gateway.currency,
+            "currency": gateway_instance.data.currency,
             "plan": plan,
         }
 
@@ -263,8 +277,7 @@ class PaymentGatewayService(BaseService):
         i18n = self.translator_hub.get_translator_by_locale(locale=user.language)
         test_details = i18n.get("test-payment")
 
-        test_payment_id = uuid.uuid4()
-        test_pricing = PriceDetailsDto()
+        test_pricing = PriceDetailsDto(original_amount=2)
         test_plan = PlanSnapshotDto.test()
 
         test_payment: PaymentResult = await gateway_instance.handle_create_payment(
@@ -275,15 +288,15 @@ class PaymentGatewayService(BaseService):
             payment_id=test_payment.id,
             status=TransactionStatus.PENDING,
             purchase_type=PurchaseType.NEW,
-            gateway_type=gateway_instance.gateway.type,
+            gateway_type=gateway_instance.data.type,
             is_test=True,
             pricing=test_pricing,
-            currency=gateway_instance.gateway.currency,
+            currency=gateway_instance.data.currency,
             plan=test_plan,
         )
         await self.transaction_service.create(user, test_transaction)
 
-        logger.info(f"Created test transaction '{test_payment_id}' for user '{user.telegram_id}'")
+        logger.info(f"Created test transaction '{test_payment.id}' for user '{user.telegram_id}'")
         logger.info(
             f"Created test payment '{test_payment.id}' for gateway '{gateway_type}', "
             f"link: '{test_payment.url}'"
@@ -310,7 +323,12 @@ class PaymentGatewayService(BaseService):
         logger.info(f"Payment succeeded '{payment_id}' for user '{transaction.user.telegram_id}'")
 
         if transaction.is_test:
-            await send_test_transaction_notification_task.kiq(user=transaction.user)
+            await self.notification_service.notify_user(
+                user=transaction.user,
+                payload=MessagePayload(
+                    i18n_key="ntf-gateway-test-payment-confirmed",
+                ),
+            )
             return
 
         i18n_keys = {
@@ -342,7 +360,7 @@ class PaymentGatewayService(BaseService):
             }
 
         i18n_kwargs = {
-            "payment_id": transaction.payment_id,
+            "payment_id": str(transaction.payment_id),
             "gateway_type": transaction.gateway_type,
             "final_amount": transaction.pricing.final_amount,
             "discount_percent": transaction.pricing.discount_percent,
@@ -358,7 +376,7 @@ class PaymentGatewayService(BaseService):
             "plan_duration": i18n_format_days(transaction.plan.duration),
         }
 
-        await send_system_notification_task.kiq(
+        await self.notification_service.system_notify(
             ntf_type=SystemNotificationType.SUBSCRIPTION,
             payload=MessagePayload.not_deleted(
                 i18n_key=i18n_key,
