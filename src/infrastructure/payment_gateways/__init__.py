@@ -4,6 +4,7 @@ from .heleket import HeleketGateway
 from .telegram_stars import TelegramStarsGateway
 from .yookassa import YookassaGateway
 from .yoomoney import YoomoneyGateway
+from .platega import PlategaGateway
 
 __all__ = [
     "BasePaymentGateway",
@@ -13,4 +14,5 @@ __all__ = [
     "YoomoneyGateway",
     "CryptomusGateway",
     "HeleketGateway",
+    "PlategaGateway"
 ]

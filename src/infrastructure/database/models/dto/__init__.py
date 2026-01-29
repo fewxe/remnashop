@@ -10,6 +10,7 @@ from .payment_gateway import (
     RobokassaGatewaySettingsDto,
     YookassaGatewaySettingsDto,
     YoomoneyGatewaySettingsDto,
+    PlategaGatewaySettingsDto,
 )
 from .plan import PlanDto, PlanDurationDto, PlanPriceDto, PlanSnapshotDto
 from .promocode import PromocodeActivationDto, PromocodeDto
@@ -39,6 +40,7 @@ __all__ = [
     "CryptomusGatewaySettingsDto",
     "CryptopayGatewaySettingsDto",
     "HeleketGatewaySettingsDto",
+    "PlategaGatewaySettingsDto",
     "PaymentGatewayDto",
     "PaymentResult",
     "RobokassaGatewaySettingsDto",
