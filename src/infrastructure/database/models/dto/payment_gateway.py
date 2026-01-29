@@ -83,6 +83,12 @@ class CryptopayGatewaySettingsDto(GatewaySettingsDto):
     secret_key: Optional[SecretStr] = None
 
 
+class PlategaGatewaySettingsDto(GatewaySettingsDto):
+    type: Literal[PaymentGatewayType.PLATEGA] = PaymentGatewayType.PLATEGA
+    merchant_id: Optional[str] = None
+    api_key: Optional[SecretStr] = None
+
+
 class RobokassaGatewaySettingsDto(GatewaySettingsDto):
     type: Literal[PaymentGatewayType.ROBOKASSA] = PaymentGatewayType.ROBOKASSA
     shop_id: Optional[str] = None
@@ -98,6 +104,7 @@ AnyGatewaySettingsDto = Annotated[
         HeleketGatewaySettingsDto,
         CryptopayGatewaySettingsDto,
         RobokassaGatewaySettingsDto,
+        PlategaGatewaySettingsDto,
     ],
     Field(discriminator="type"),
 ]
