@@ -50,18 +50,16 @@ hdr-plan = { $is_trial_plan ->
 }
 
 frg-user =
-    <blockquote>
-    • <b>ID</b>: <code>{ NUMBER($telegram_id, useGrouping: 0) }</code>
-    • <b>Имя</b>: { $name }
     { $show_personal_discount ->
-    [1] • <b>Персональная скидка</b>: { $personal_discount }%
-    *[0] { empty }
+        [1] { $show_purchase_discount ->
+            [1] <blockquote>• <b>Персональная скидка</b>: { $personal_discount }%<br>• <b>Скидка на покупку</b>: { $purchase_discount }%</blockquote>
+            *[0] <blockquote>• <b>Персональная скидка</b>: { $personal_discount }%</blockquote>
+        }
+        *[0] { $show_purchase_discount ->
+            [1] <blockquote>• <b>Скидка на покупку</b>: { $purchase_discount }%</blockquote>
+            *[0] { empty }
+        }
     }
-    { $show_purchase_discount ->
-    [1] • <b>Скидка на покупку</b>: { $purchase_discount }%
-    *[0] { empty }
-    }
-    </blockquote>
 
 frg-user-info =
     <blockquote>

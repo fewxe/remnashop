@@ -294,7 +294,6 @@ class Currency(UpperStrEnum):
 
 class Command(Enum):
     START = BotCommand(command="start", description="command.start")
-    PAYSUPPORT = BotCommand(command="paysupport", description="command.paysupport")
     RULES = BotCommand(command="rules", description="command.rules")
     HELP = BotCommand(command="help", description="command.help")
 

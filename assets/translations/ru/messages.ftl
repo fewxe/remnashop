@@ -1,8 +1,15 @@
 # Menu
-msg-main-menu =
-    { hdr-user-profile }
-    { frg-user }
+msg-main-menu = 
+    <tg-emoji emoji-id="5879585266426973039">👍</tg-emoji> <b>Whitenet VPN</b> — сервис для быстрого и безопасного интернет-соединения с обходом региональных ограничений.
 
+    • Обход всех блокировок
+    • Скорость до 10 Гбит/с
+    • Множество локаций 
+    • Стабильный доступ ко всем сайтам и приложениям 
+    • Youtube без рекламы 
+    • Telegram без ограничений
+
+    { frg-user }
     { hdr-subscription }
     { $status ->
     [ACTIVE]
@@ -687,6 +694,10 @@ msg-remnawave-main =
     [one] ядро
     [few] ядра
     *[more] ядер
+    } { $cpu_threads } { $cpu_threads ->
+    [one] поток
+    [few] потока
+    *[more] потоков
     }
     • <b>ОЗУ</b>: { $ram_used } / { $ram_total } ({ $ram_used_percent }%)
     • <b>Аптайм</b>: { $uptime }

@@ -41,11 +41,11 @@ btn-requirement =
 
 btn-menu =
     .trial = 🎁 ПОПРОБОВАТЬ БЕСПЛАТНО
-    .connect = 🚀 Подключиться
-    .devices = 📱 Устройства
-    .subscription = 💳 Подписка
-    .invite = 👥 Пригласить
-    .support = 🆘 Поддержка
+    .connect = ⚡️ Подключиться
+    .devices = 📱 Мои устройства
+    .subscription = ⭐ Премиум подписка
+    .invite = 🗣 Пригласить
+    .support = 👥 Поддержка
     .dashboard = 🛠 Панель управления
 
     .connect-not-available =
