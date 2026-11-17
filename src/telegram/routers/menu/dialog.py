@@ -95,6 +95,13 @@ menu = Window(
         ),
     ),
     Row(
+        Start(
+            text=I18nFormat("btn-menu.promocode"),
+            id="promocode",
+            state=Subscription.PROMOCODE,
+        ),
+    ),
+    Row(
         Button(
             text=I18nFormat("btn-menu.invite"),
             id="invite",

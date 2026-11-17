@@ -68,6 +68,7 @@ btn-menu =
     .connect-reserve = 🔗 Подключиться (резерв)
     .devices = 📱 Мои устройства
     .subscription = ⭐️ Премиум подписка
+    .promocode = 🎟 Активировать промокод
     .invite = 🗣 Пригласить
     .support = 👥 Поддержка
     .web-cabinet = 🌐 Личный кабинет
@@ -560,7 +561,6 @@ btn-subscription =
     .new = 💸 Купить подписку
     .renew = 🔄 Продлить
     .change = 🔃 Изменить
-    .promocode = 🎟 Активировать промокод
     .promocode-confirm = ✅ Подтвердить
     .pay = 💳 Оплатить
     .get = 🎁 Получить бесплатно
@@ -593,13 +593,9 @@ btn-ad-links =
     .title = { $is_active ->
     [1] 🟢
     *[0] 🔴
-<<<<<<< HEAD
-    } Статус
-=======
     } { $name }
 
     .active-toggle = { $is_active ->
     [1] 🟢 Включена
     *[0] 🔴 Выключена
     }
->>>>>>> main

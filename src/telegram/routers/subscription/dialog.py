@@ -55,13 +55,6 @@ subscription = Window(
             when=F["has_active_subscription"],
         ),
     ),
-    Row(
-        Button(
-            text=I18nFormat("btn-subscription.promocode"),
-            id="goto_promocode",
-            on_click=lambda c, w, m: m.switch_to(Subscription.PROMOCODE),
-        ),
-    ),
     *back_main_menu_button,
     IgnoreUpdate(),
     state=Subscription.MAIN,
