@@ -279,11 +279,7 @@ promocode_window = Window(
             when=F["has_promo"],
         ),
     ),
-    SwitchTo(
-        text=I18nFormat("btn-back.general"),
-        id="back_main",
-        state=Subscription.MAIN,
-    ),
+    *back_main_menu_button,
     state=Subscription.PROMOCODE,
     getter=getter_promocode,
 )
